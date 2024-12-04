@@ -1,4 +1,4 @@
-package kr.co.proten.llmops.api.global.config;
+package kr.co.proten.llmops.global.config;
 
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -20,27 +20,26 @@ public class SecurityConfig {
     private static final String[] PERMIT_URL_ARRAY = {
             "/user/hello", // 예: 인증 없이 접근 가능한 경로
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/**"
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .httpBasic().disable() // REST API이므로 기본 로그인 UI 비활성화
-                .csrf().disable() // REST API이므로 CSRF 비활성화
-                .cors().configurationSource(corsConfigurationSource()) // CORS 설정 추가
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers(PERMIT_URL_ARRAY).permitAll() // 허용할 URL
-                .anyRequest().authenticated(); // 나머지는 인증 필요
-
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(PERMIT_URL_ARRAY).permitAll();
+                    auth.anyRequest().authenticated();
+                });
         return http.build();
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*")); // 모든 도메인 허용
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://192.168.*.*","http://localhost:3000", "http://127.0.0.1:3000")); // 내부망, 로컬 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);

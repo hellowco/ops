@@ -1,4 +1,4 @@
-package kr.co.proten.llmops.api.User;
+package kr.co.proten.llmops.api.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

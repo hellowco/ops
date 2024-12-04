@@ -26,6 +26,7 @@ repositories {
 
 ext {
     set('springAiVersion', "1.0.0-M4")
+    set('opensearchVersion', "2.15.0")
 }
 
 dependencies {
@@ -33,16 +34,29 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.google.code.gson:gson:2.8.9'
+
+    // Ollama, OpenAI
     implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter'
     implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
+
+    // Opensearch
+    implementation "org.opensearch.client:opensearch-rest-high-level-client:${opensearchVersion}"
+
+    // pdf,docx 변환
+    implementation 'org.apache.pdfbox:pdfbox:3.0.3'
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
 
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
 
+    //test code
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.mockito:mockito-core'
+
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -54,4 +68,19 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.bootJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName.set("llmops-api")
+    archiveVersion.set("")
+}
+
+jar {
+    enabled = false
+}
+
+// Springboot의 기본 slf4j와 commons-loggin의 충돌 방지
+configurations.configureEach {
+    exclude group: 'commons-logging', module: 'commons-logging'
 }
