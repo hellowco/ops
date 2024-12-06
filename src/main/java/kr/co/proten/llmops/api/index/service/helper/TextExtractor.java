@@ -60,13 +60,6 @@ public class TextExtractor {
             throw new UnsupportedOperationException("Unsupported operating system: " + osName);
         }
 
-//        // 리소스 경로에서 파일 찾기
-//        ClassLoader classLoader = getClass().getClassLoader();
-//        File exeFile = new File(Objects.requireNonNull(classLoader.getResource(exeFileName)).getFile());
-//        if (!exeFile.exists()) {
-//            throw new IOException("Executable file not found: " + exeFile.getAbsolutePath());
-//        }
-
         // 리소스 경로에서 실행 파일을 복사해 임시 파일로 저장
         File tempExeFile = File.createTempFile("snf_exe", osName.contains("win") ? ".exe" : "");
         ClassLoader classLoader = getClass().getClassLoader();
@@ -81,6 +74,7 @@ public class TextExtractor {
         // 실행 인자 설정
         String arg1 = file.getAbsolutePath();
         String arg2 = "-NO_WITHPAGE";
+        String arg3 = "-U8";
 
         Path saveDir = Paths.get(savePath);
         if (!Files.exists(saveDir)) {
@@ -91,7 +85,7 @@ public class TextExtractor {
         File resultFile = new File(saveDir+ "/" + removeFileExtension(file.getName()) + ".txt"); // 결과를 저장할 파일
 
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder(List.of(tempExeFile.getAbsolutePath(), arg1, arg2));
+            ProcessBuilder processBuilder = new ProcessBuilder(List.of(tempExeFile.getAbsolutePath(), arg1, arg2, arg3));
 
             // 결과를 파일로 리다이렉트
             processBuilder.redirectOutput(resultFile);

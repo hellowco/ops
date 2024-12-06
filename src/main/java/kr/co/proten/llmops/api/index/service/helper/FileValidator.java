@@ -6,6 +6,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+import static kr.co.proten.llmops.global.common.utils.FileUtil.getExtension;
+
 @Component
 public class FileValidator {
 
@@ -52,10 +54,5 @@ public class FileValidator {
         }
     }
 
-    private String getExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
-            return "";
-        }
-        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-    }
+
 }
