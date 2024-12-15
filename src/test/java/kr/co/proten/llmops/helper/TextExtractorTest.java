@@ -1,6 +1,6 @@
 package kr.co.proten.llmops.helper;
 
-import kr.co.proten.llmops.api.index.service.helper.TextExtractor;
+import kr.co.proten.llmops.core.helpers.TextExtractor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;

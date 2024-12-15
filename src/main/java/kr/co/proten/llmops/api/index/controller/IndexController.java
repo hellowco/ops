@@ -2,49 +2,39 @@ package kr.co.proten.llmops.api.index.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.opensearch.action.index.IndexRequest;
+import kr.co.proten.llmops.api.document.service.DocumentService;
+import kr.co.proten.llmops.api.index.service.IndexService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-@Tag(name = "Index", description = "index-related operations")
-@RequestMapping("/api/index")
+@Tag(name = "Index", description = "인덱스 생성/삭제")
+@RequestMapping("/api")
 public class IndexController {
-//    @GetMapping("/")
-//    @Operation(summary = "Index List API", description = "인덱스 리스트")
-//    public ResponseEntity<?> getIndexList() {
-//         /*
-//        인덱스명으로 서치해서 유니크한 리스트만 가져오기
-//        GET summary_file/_search
-//        {
-//          "size": 0,
-//          "aggs": {
-//            "unique_indices": {
-//              "terms": {
-//                "field": "_index",
-//                "size": 1000
-//              }
-//            }
-//          }
-//        }
-//        * */
-//        return ResponseEntity.ok().body(new ArrayList<>());
+
+    private final IndexService indexService;
+
+    public IndexController(IndexService indexService) {
+        this.indexService = indexService;
+    }
+
+//    @PostMapping("/index")
+//    @Operation(summary = "Create Index API", description = "인덱스 생성 API")
+//    public ResponseEntity<?> createIndex(@RequestParam(value="indexName") String indexName) throws IOException {
+//        return ResponseEntity.ok().body(indexService.createIndexWithMapping(indexName));
 //    }
 //
-//    @PostMapping("/")
-//    @Operation(summary = "Create Index API", description = "인덱스 생성")
-//    public ResponseEntity<?> createIndex(@RequestBody IndexRequest indexRequest) {
-//        return ResponseEntity.ok().body(new ArrayList<>());
-//    }
-//
-//    @PutMapping("/")
-//    @Operation(summary = "Update Index API", description = "인덱스 수정")
-//    public ResponseEntity<?> updateIndex() {
-//        return ResponseEntity.ok().body(List.of("file.getName()"));
+//    @DeleteMapping("/index")
+//    @Operation(summary = "Delete Index API", description = "인덱스 삭제 API")
+//    public ResponseEntity<?> deleteIndex(@RequestParam(value="indexName") String indexName) throws IOException {
+//        return ResponseEntity.ok().body(indexService.deleteIndex(indexName));
 //    }
 }

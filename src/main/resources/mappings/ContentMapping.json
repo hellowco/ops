@@ -1,0 +1,286 @@
+{
+  "mappings": {
+    "properties": {
+      "@timestamp": {
+        "type": "date"
+      },
+      "id": {
+        "type": "keyword",
+        "ignore_above": 256
+      },
+      "docId": {
+        "type": "keyword",
+        "ignore_above": 256
+      },
+      "index": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "content": {
+        "type": "text",
+        "fields": {
+          "exact": {
+            "type": "text",
+            "analyzer": "standard_analyzer"
+          }
+        },
+        "analyzer": "pro10_kr",
+        "search_analyzer": "pro10_search"
+      },
+      "content_vec": {
+        "type": "knn_vector",
+        "dimension": 768,
+        "method": {
+          "engine": "faiss",
+          "space_type": "innerproduct",
+          "name": "hnsw",
+          "parameters": {
+            "ef_construction": 512,
+            "m": 64
+          }
+        }
+      },
+      "page": {
+        "type": "long"
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "similarity": {
+        "default": {
+          "type": "BM25",
+          "b": 0.0,
+          "k1": 1.2
+        }
+      },
+      "number_of_shards": 5,
+      "number_of_replicas": 1,
+      "max_ngram_diff": 20,
+      "max_result_window": 1000000,
+      "max_inner_result_window": 1000,
+      "blocks": {
+        "read_only_allow_delete": null
+      }
+    },
+    "knn": "true",
+    "analysis": {
+      "filter": {
+        "edge_filter": {
+          "type": "edge_ngram",
+          "min_gram": "1",
+          "max_gram": "20"
+        },
+        "ngram_filter": {
+          "type": "ngram",
+          "min_gram": "2",
+          "max_gram": "20"
+        }
+      },
+      "char_filter": {
+        "remove_whitespace_filter": {
+          "pattern": " ",
+          "type": "pattern_replace",
+          "replacement": ""
+        },
+        "remove_filter": {
+          "pattern": "[_]",
+          "type": "pattern_replace",
+          "replacement": " "
+        },
+        "replace_special_char_filter": {
+          "pattern": "[^가-힣xfe0-9a-zA-Z\\s]",
+          "type": "pattern_replace",
+          "replacement": " "
+        },
+        "remove_special_char_filter": {
+          "pattern": "[^가-힣xfe0-9a-zA-Z\\s]",
+          "type": "pattern_replace",
+          "replacement": ""
+        }
+      },
+      "analyzer": {
+        "edge_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "tokenizer": "edge_ngram"
+        },
+        "ngram_analyzer": {
+          "filter": [
+            "lowercase",
+            "ngram_filter"
+          ],
+          "tokenizer": "my_whitespace"
+        },
+        "category_analyzer": {
+          "tokenizer": "category_tokenizer"
+        },
+        "reverse_ngram_analyzer": {
+          "filter": [
+            "lowercase",
+            "reverse",
+            "edge_filter",
+            "reverse"
+          ],
+          "tokenizer": "standard"
+        },
+        "reverse_ngram_sc_ws_analyzer": {
+          "filter": [
+            "lowercase",
+            "reverse",
+            "edge_filter",
+            "reverse"
+          ],
+          "char_filter": [
+            "remove_special_char_filter",
+            "remove_whitespace_filter"
+          ],
+          "tokenizer": "standard"
+        },
+        "bigram_search_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "tokenizer": "standard"
+        },
+        "front_ngram_sc_ws_analyzer": {
+          "filter": [
+            "lowercase",
+            "edge_filter"
+          ],
+          "char_filter": [
+            "remove_special_char_filter",
+            "remove_whitespace_filter"
+          ],
+          "tokenizer": "standard"
+        },
+        "bigram_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "tokenizer": "my_bigram"
+        },
+        "pattern_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "tokenizer": "my_pattern"
+        },
+        "keyword_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "char_filter": [
+            "remove_special_char_filter",
+            "remove_whitespace_filter"
+          ],
+          "tokenizer": "my_keyword"
+        },
+        "front_ngram_analyzer": {
+          "filter": [
+            "lowercase",
+            "edge_filter"
+          ],
+          "tokenizer": "standard"
+        },
+        "whitespace_analyzer": {
+          "filter": [
+            "lowercase",
+            "trim"
+          ],
+          "tokenizer": "my_whitespace"
+        },
+        "standard_analyzer": {
+          "filter": [
+            "lowercase",
+            "trim"
+          ],
+          "tokenizer": "my_standard"
+        },
+        "ngram_sc_ws_analyzer": {
+          "filter": [
+            "lowercase",
+            "ngram_filter"
+          ],
+          "char_filter": [
+            "remove_special_char_filter",
+            "remove_whitespace_filter"
+          ],
+          "tokenizer": "standard"
+        },
+        "auth_analyzer": {
+          "filter": [
+            "lowercase"
+          ],
+          "char_filter": [
+            "remove_filter"
+          ],
+          "tokenizer": "standard"
+        }
+      },
+      "tokenizer": {
+        "my_whitespace": {
+          "type": "whitespace",
+          "max_token_length": "30"
+        },
+        "my_keyword": {
+          "type": "keyword",
+          "max_token_length": "20"
+        },
+        "my_bigram": {
+          "token_chars": [
+            "letter",
+            "digit",
+            "punctuation"
+          ],
+          "max_token_length": "20",
+          "min_gram": "2",
+          "type": "ngram",
+          "max_gram": "20"
+        },
+        "my_standard": {
+          "type": "standard",
+          "max_token_length": "30"
+        },
+        "my_pattern": {
+          "pattern": "[\\^\\^]",
+          "type": "pattern"
+        },
+        "category_tokenizer": {
+          "pattern": "[\\/]",
+          "type": "pattern"
+        },
+        "edge_ngram": {
+          "token_chars": [
+            "letter",
+            "digit",
+            "punctuation"
+          ],
+          "min_gram": "1",
+          "type": "edge_ngram",
+          "max_gram": "20"
+        },
+        "my_ngram": {
+          "token_chars": [
+            "letter",
+            "digit",
+            "punctuation"
+          ],
+          "max_token_length": "20",
+          "min_gram": "1",
+          "type": "ngram",
+          "max_gram": "20"
+        }
+      }
+    }
+  }
+}
