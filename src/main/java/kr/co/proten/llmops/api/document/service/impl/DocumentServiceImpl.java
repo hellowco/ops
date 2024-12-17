@@ -97,7 +97,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Map<String, Object> uploadDocument(String indexName, String fileName, int chunkSize, int overlapSize, String modelType, List<String> processingKeys) {
+    public Map<String, Object> uploadDocument(String indexName, String knowledgeName, String fileName, int chunkSize, int overlapSize, String modelType, List<String> processingKeys) {
         Map<String, Object> result = new HashMap<>();
 
         String fileType = getExtension(fileName);
@@ -110,7 +110,6 @@ public class DocumentServiceImpl implements DocumentService {
         EmbeddingProcessor embeddingProcessor = embeddingProcessorFactory.getEmbeddingService(modelType)
                 .orElseThrow(() -> new UnsupportedOperationException("지원하지 않는 임베딩 형식: " + modelType));
 
-        ProcessingResult processingResult = null;
         try {
             // 3. 파일 내용 읽기
             log.info("파일 읽기 시작: {}", fileName);
@@ -133,7 +132,8 @@ public class DocumentServiceImpl implements DocumentService {
 
             // 6. 청크 생성
             log.info("파일 청크 생성 시작 \n 청크 크기: {}, 오버랩 크기: {}", chunkSize, overlapSize);
-            List<String> chunks = chunkProcessor.createChunks(fileContent, chunkSize, overlapSize);
+            // 청크 방식 선택 된거 사용할 수 있도록 바꿔야할 듯
+            List<String> chunks = chunkProcessor.chunkText(fileContent, chunkSize, overlapSize);
             log.info("{} 파일이 {}로 청크됨.", fileName, chunks.size());
 
             // 7. 병렬로 임베딩 처리
@@ -149,18 +149,21 @@ public class DocumentServiceImpl implements DocumentService {
             //문서 내용 빌더
             DocumentBuilder builder = new DocumentBuilder();
             List<Document> documents = builder.createDocuments(
-                    indexName,
+                    knowledgeName,
                     docId,
                     chunks,
                     embeddings
             );
 
-            //메타데이터 빌더 (추후 추가)
-            // extract Metadata from file
-            // for now hard coding
+            // TODO:: 메타데이터 빌더 (추후 수정 필요)
+            // TODO:: 파일 경로, pdf 관련 수정 필요
             Metadata metadata = builder.buildMetadata(
-                    indexName,
-                    docId
+                    knowledgeName,
+                    docId,
+                    fileName,
+                    fileName,
+                    chunkSize,
+                    chunks.size()
             );
 
             //저장
@@ -182,18 +185,78 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Map<String, Object> getDocument(String index, String docId) throws Exception{
+    public Map<String, Object> getDocument(String index, String knowledgeName, String docId, int pageNo, int pageSize) throws Exception{
         Map<String, Object> result = new HashMap<>();
-        List<Document> documents= openSearchDocumentRepository.getDocByDocId(index, docId);
+        // Validate page params
+        int adjustedPageNo = (pageNo <= 1) ? 0 : pageNo - 1;
+        int adjustedPageSize = Math.max(pageSize, 1);
 
-        List<DocumentDTO> documentDTOList = documents.stream()
-                .map(this::convertToDTO) // 변환 메서드 호출
+        List<Document> documents= openSearchDocumentRepository.getDocByDocId(index, knowledgeName, docId, adjustedPageNo, adjustedPageSize);
+
+        List<DocumentDTO> documentDTOList = (documents == null || documents.isEmpty())
+                ? Collections.emptyList()
+                : documents.stream()
+                .map(this::convertToDTO)
                 .toList();
+
+        log.info("converted documents: {}", documentDTOList);
+
+        // 결과 반환
+        if(!documentDTOList.isEmpty()){
+            result.put("status", "success");
+            result.put("message", "파일 데이터 리스트 가져오기 성공");
+            result.put("response", documentDTOList);
+        } else {
+            result.put("status", "failed");
+            result.put("message", "파일 데이터 리스트 가져오기 실패");
+            result.put("response", documentDTOList);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> getDocumentMetadata(String index, String knowledgeName, String docId) throws Exception{
+        Map<String, Object> result = new HashMap<>();
+
+        MetadataDTO metadataDTO = MetadataDTO.of(openSearchDocumentRepository.getDocMetadataByDocId(index, knowledgeName, docId));
+
+        log.info("Metadata of document: {}", metadataDTO);
+
+        // 결과 반환
+        if(metadataDTO != null){
+            result.put("status", "success");
+            result.put("message", "파일 메타데이터 가져오기 성공");
+            result.put("response", metadataDTO);
+        } else {
+            result.put("status", "failed");
+            result.put("message", "파일 메타데이터 가져오기 실패");
+            result.put("response", null);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> updateDocument(String index, MetadataDTO metadataDTO){
+        Map<String, Object> result = new HashMap<>();
+        String res = openSearchDocumentRepository.updateDocMetadataByDocId(index, metadataDTO.getDocId(), convertToMap(MetadataDTO.toMetadata(metadataDTO)));
 
         // 결과 반환
         result.put("status", "success");
-        result.put("message", "파일 청크 리스트 가져오기 성공");
-        result.put("response", documentDTOList);
+        result.put("message", "파일 수정 성공");
+        result.put("response", res);
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> deleteDocument(String index, String knowledgeName, String docId){
+        Map<String, Object> result = new HashMap<>();
+        openSearchDocumentRepository.deleteDocByDocId(index, knowledgeName, docId);
+
+        // 결과 반환
+        result.put("status", "success");
+        result.put("message", "파일 삭제 성공");
         return result;
     }
 
@@ -202,55 +265,11 @@ public class DocumentServiceImpl implements DocumentService {
         return new DocumentDTO(
                 document.getId(),
                 document.getDocId(),
+                document.getChunkId(),
                 document.getIndex(),
                 document.isActive(),
                 document.getContent(),
-                document.getContentVec(),
                 document.getPage()
         );
     }
-
-    public Map<String, Object> updateDocument(String index, MetadataDTO metadataDTO){
-        Map<String, Object> result = new HashMap<>();
-        String res = openSearchDocumentRepository.updateDocMetadataByDocId(index, metadataDTO.getDocId(), convertToMap(MetadataDTO.toMetadata(metadataDTO)));
-
-        // 결과 반환
-        result.put("status", "success");
-        result.put("message", "파일 삭제 성공");
-        result.put("response", res);
-        return result;
-    }
-
-
-    @Override
-    public Map<String, Object> deleteDocument(String index, String docId){
-        Map<String, Object> result = new HashMap<>();
-        openSearchDocumentRepository.deleteDocByDocId(index, docId);
-
-        // 결과 반환
-        result.put("status", "success");
-        result.put("message", "파일 삭제 성공");
-        return result;
-    }
-
 }
-
-/*
-1. getDocByDocId
-java
-코드 복사
-List<Map<String, Object>> docs = getDocByDocId("metadata_index", "12345");
-docs.forEach(System.out::println);
-2. deleteDocByDocId
-java
-코드 복사
-deleteDocByDocId("metadata_index", "12345");
-3. updateDocByDocId
-java
-코드 복사
-Map<String, Object> updatedFields = Map.of(
-    "key1", "newValue1",
-    "key2", "newValue2"
-);
-updateDocByDocId("metadata_index", "12345", updatedFields);
- */

@@ -12,6 +12,9 @@
         "type": "keyword",
         "ignore_above": 256
       },
+      "chunkId": {
+        "type": "long"
+      },
       "index": {
         "type": "text",
         "fields": {

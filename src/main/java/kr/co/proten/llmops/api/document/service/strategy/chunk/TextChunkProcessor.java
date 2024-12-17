@@ -17,35 +17,67 @@ public class TextChunkProcessor implements ChunkProcessor {
     @Override
     public String getServiceType() { return CHUNK_TYPE; }
 
+    /**
+     * 텍스트를 지정된 크기로 청크 단위로 나누는 메서드
+     * @param text 원본 텍스트
+     * @param chunkSize 청크 크기
+     * @param overlapSize 겹치는 크기
+     * @return 청크 리스트
+     */
     @Override
-    public List<String> createChunks(String fileContent, int chunkSize, int overlap) {
-        if (overlap >= chunkSize) {
+    public List<String> chunkText(String text, int chunkSize, int overlapSize) {
+        if (overlapSize >= chunkSize) {
             throw new IllegalArgumentException("Overlap 사이즈는 Chunk 사이즈보다 작아야 합니다.");
         }
 
         log.info("Creating chunks from file content");
 
         List<String> chunks = new ArrayList<>();
-        List<String> buffer = new ArrayList<>();
+        int start = 0;
+        int length = text.length();
 
-        // 파일 내용을 줄 단위로 분리
-        String[] lines = fileContent.split("\n");
+        while (start < length) {
+            int end = Math.min(start + chunkSize, length);
+            chunks.add(text.substring(start, end));
+            start += (chunkSize - overlapSize); // 겹치는 부분만큼 이동
+        }
 
-        for (String line : lines) {
-            buffer.add(line.trim()); // 각 줄을 트리밍하여 추가
-            while (buffer.size() >= chunkSize) {
-                // 청크를 문자열로 생성
-                String chunk = String.join("\n", buffer.subList(0, chunkSize));
-                chunks.add(chunk);
+        return chunks;
+    }
 
-                // 겹치는 데이터 유지
-                buffer = new ArrayList<>(buffer.subList(chunkSize - overlap, buffer.size()));
+    /**
+     * Sentence Window 기반으로 텍스트를 청크로 나누는 메서드
+     * @param text 원본 텍스트
+     * @param maxChunkSize 최대 청크 크기
+     * @return 문장 기반 청크 리스트
+     */
+    public List<String> chunkBySentenceWindow(String text, int maxChunkSize) {
+        List<String> chunks = new ArrayList<>();
+        StringBuilder chunkBuilder = new StringBuilder();
+        int currentSize = 0;
+
+        // 정규식을 이용해 문장을 구분
+        String[] sentences = text.split("(?<=[.!?,])(?=\\s)");
+
+        for (String sentence : sentences) {
+            String trimmedSentence = sentence.trim();
+
+            // 청크에 문장을 추가해도 최대 크기를 초과하지 않는 경우
+            if (currentSize + trimmedSentence.length() <= maxChunkSize) {
+                chunkBuilder.append(trimmedSentence).append(" ");
+                currentSize += trimmedSentence.length();
+            } else {
+                // 현재 청크를 저장하고 새 청크를 시작
+                chunks.add(chunkBuilder.toString().trim());
+                chunkBuilder.setLength(0); // 초기화
+                chunkBuilder.append(trimmedSentence).append(" ");
+                currentSize = trimmedSentence.length();
             }
         }
 
-        // 남은 데이터 처리
-        if (!buffer.isEmpty()) {
-            chunks.add(String.join("\n", buffer));
+        // 마지막 청크를 추가
+        if (!chunkBuilder.isEmpty()) {
+            chunks.add(chunkBuilder.toString().trim());
         }
 
         return chunks;

@@ -24,7 +24,7 @@
       "isActive": {
         "type": "boolean"
       },
-      "lastUpdateDate": {
+      "lastUpdatedDate": {
         "type": "date",
         "format": "yyyyMMddHHmmssSSS||yyyyMMddHHmmss||yyyyMMdd",
         "ignore_malformed": true

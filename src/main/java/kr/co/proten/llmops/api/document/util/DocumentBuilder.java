@@ -2,6 +2,7 @@ package kr.co.proten.llmops.api.document.util;
 
 import kr.co.proten.llmops.api.document.entity.Document;
 import kr.co.proten.llmops.api.document.entity.Metadata;
+import kr.co.proten.llmops.core.helpers.DateUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,18 +11,35 @@ import java.util.stream.IntStream;
 import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 
 public class DocumentBuilder {
+    public Document createDocument(
+            String knowledgeName,
+            String docId,
+            long chunkId,
+            String chunk,
+            List<Double> embeddings
+    ) {
+        return buildDocument(
+                knowledgeName,
+                docId,
+                chunkId, // chunkId는 문서에서 청크된 순서
+                chunk,
+                embeddings
+                );
+    }
+
     public List<Document> createDocuments(
-        String indexName, 
-        String docId, 
-        List<String> chunks, 
+        String knowledgeName,
+        String docId,
+        List<String> chunks,
         List<List<Double>> embeddings
     ) {
         validateInput(chunks, embeddings);
         
         return IntStream.range(0, chunks.size())
             .mapToObj(i -> buildDocument(
-                indexName, 
-                docId, 
+                knowledgeName,
+                docId,
+                i + 1, // chunkId는 문서에서 청크된 순서
                 chunks.get(i), 
                 embeddings != null ? embeddings.get(i) : null
             ))
@@ -38,17 +56,19 @@ public class DocumentBuilder {
             throw new IllegalArgumentException("Number of chunks must match number of embeddings");
         }
     }
-    
+
     private Document buildDocument(
-        String indexName, 
-        String docId, 
-        String content, 
+        String knowledgeName,
+        String docId,
+        long chunkId,
+        String content,
         List<Double> contentVec
     ) {
         return Document.builder()
-            .index(indexName)
+            .index(knowledgeName)
             .id(generateUUID())
             .docId(docId)
+            .chunkId(chunkId)
             .content(content)
             .contentVec(contentVec)
             .isActive(true)
@@ -57,23 +77,27 @@ public class DocumentBuilder {
     }
 
     public Metadata buildMetadata(
-            String indexName,
-            String docId
+            String knowledgeName,
+            String docId,
+            String filename,
+            String filepath,
+            int chunkSize,
+            int chunkNum
     ) {
         return Metadata.builder()
                 .id(generateUUID())
                 .docId(docId)
-                .index(indexName)
+                .index(knowledgeName)
                 .isActive(true)
-                .lastUpdatedDate("2024-12-12")
-                .convertDate("2024-12-11")
-                .orgFileName("original_file.txt")
-                .orgFilePath("/path/to/original/file")
-                .totalPage(100)
-                .chunkSize(1024)
-                .chunkNum(10)
-                .pdfFileName("document.pdf")
-                .pdfFilePath("/path/to/pdf/file")
+                .lastUpdatedDate(DateUtil.generateCurrentTimestamp())
+                .convertDate(DateUtil.generateCurrentTimestamp())
+                .orgFileName(filename)
+                .orgFilePath(filepath)
+                .totalPage(0)
+                .chunkSize(chunkSize)
+                .chunkNum(chunkNum)
+                .pdfFileName("N/A")
+                .pdfFilePath("N/A")
                 .userId("user_001")
                 .version("1.0")
                 .build();

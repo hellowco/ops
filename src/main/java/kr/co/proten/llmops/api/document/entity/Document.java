@@ -1,36 +1,46 @@
 package kr.co.proten.llmops.api.document.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
-@Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Document {
     @JsonProperty("id")
-    String id;
+    private String id;
 
     @JsonProperty("docId")
-    String docId;
+    private String docId;
+
+    @JsonProperty("chunkId")
+    private long chunkId;
 
     @JsonProperty("index")
-    String index;
+    private String index;
 
     @JsonProperty("isActive")
-    boolean isActive;
+    private boolean isActive;
 
     @JsonProperty("content")
-    String content;
+    private String content;
 
     @JsonProperty("content_vec")
     @Nullable
-    List<Double> contentVec;
+    private List<Double> contentVec;
 
     @JsonProperty("page")
-    long page;
+    @Nullable
+    private Long page = 0L;
+
+    @JsonProperty("@timestamp")
+    @Nullable
+    private String timestamp;
 }

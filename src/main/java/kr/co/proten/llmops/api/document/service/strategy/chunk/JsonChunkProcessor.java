@@ -21,7 +21,12 @@ public class JsonChunkProcessor implements ChunkProcessor {
     }
 
     @Override
-    public List<String> createChunks(String fileContent, int chunkSize, int overlap) {
+    public List<String> chunkText(String fileContent, int chunkSize, int overlap) {
+        return List.of();
+    }
+
+    @Override
+    public List<String> chunkBySentenceWindow(String text, int maxChunkSize) {
         return List.of();
     }
 }
