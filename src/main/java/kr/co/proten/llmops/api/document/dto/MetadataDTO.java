@@ -10,6 +10,7 @@ public class MetadataDTO {
     private String id;
     private String docId;
     private String index;
+    private String description;
     private String isActive;
     private String lastUpdatedDate;
     private String convertDate;
@@ -29,6 +30,7 @@ public class MetadataDTO {
                 .id(dto.getId())
                 .docId(dto.getDocId())
                 .index(dto.getIndex())
+                .description(dto.getDescription())
                 .isActive(Boolean.parseBoolean(dto.getIsActive()))
                 .lastUpdatedDate(dto.getLastUpdatedDate())
                 .convertDate(dto.getConvertDate())
@@ -50,6 +52,7 @@ public class MetadataDTO {
                 .id(entity.getId())
                 .docId(entity.getDocId())
                 .index(entity.getIndex())
+                .description(entity.getDescription())
                 .isActive(String.valueOf(entity.isActive()))
                 .lastUpdatedDate(entity.getLastUpdatedDate())
                 .convertDate(entity.getConvertDate())

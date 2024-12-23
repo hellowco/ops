@@ -1,19 +1,8 @@
-package kr.co.proten.llmops.api.index.controller;
+package kr.co.proten.llmops.api.knowledge.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.proten.llmops.api.document.service.DocumentService;
-import kr.co.proten.llmops.api.index.service.IndexService;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import kr.co.proten.llmops.api.knowledge.service.IndexService;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @Tag(name = "Index", description = "인덱스 생성/삭제")

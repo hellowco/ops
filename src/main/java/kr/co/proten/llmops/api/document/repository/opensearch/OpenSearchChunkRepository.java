@@ -55,6 +55,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public String updateChunkByChunkId(String indexName, String docId, Map<String, Object> updatedFields) {
         return handleOpenSearchOperation(() -> {
             OpenSearchClient client = OpenSearchConnectAspect.getClient();
@@ -134,6 +135,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
         return executeSearch(searchRequest).get(0).getId();
     }
 
+    @SuppressWarnings("unchecked")
     private void updateMetadata(String indexName, Map<String, Object> updatedFields, OpenSearchClient client) throws Exception {
         String metadataIndex = indexName + "_metadata";
         String docId = updatedFields.get("docId").toString();
@@ -163,6 +165,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
     }
 
     // 메타데이터 인덱스에서 docId로 문서 ID를 조회하는 메서드
+    @SuppressWarnings("unchecked")
     private String findMetadataId(OpenSearchClient client, String metadataIndex, String docId) throws Exception {
         SearchRequest searchRequest = new SearchRequest.Builder()
                 .index(metadataIndex)

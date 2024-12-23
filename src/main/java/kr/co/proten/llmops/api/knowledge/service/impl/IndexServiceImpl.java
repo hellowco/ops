@@ -1,7 +1,7 @@
-package kr.co.proten.llmops.api.index.service.impl;
+package kr.co.proten.llmops.api.knowledge.service.impl;
 
-import kr.co.proten.llmops.api.index.repository.OpenSearchIndexRepository;
-import kr.co.proten.llmops.api.index.service.IndexService;
+import kr.co.proten.llmops.api.knowledge.repository.OpenSearchIndexRepository;
+import kr.co.proten.llmops.api.knowledge.service.IndexService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

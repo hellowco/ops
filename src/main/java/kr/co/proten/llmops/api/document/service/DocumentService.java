@@ -15,7 +15,7 @@ public interface DocumentService {
 
     Map<String, Object> getDocumentMetadata(String index, String knowledgeName, String docId) throws Exception;
 
-    Map<String, Object> updateDocument(String index, MetadataDTO metadataDTO);
+    Map<String, Object> updateDocument(String indexName, String knowledgeName, String docId, Object object);
 
     Map<String, Object> deleteDocument(String index, String knowledgeName, String docId);
 }

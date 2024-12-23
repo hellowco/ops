@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @Tag(name = "Index", description = "index-related operations")
-@RequestMapping("/api")
+@RequestMapping("/api/chunk")
 public class ChunkController {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -75,6 +75,20 @@ public class ChunkController {
     ) throws Exception {
         Map<String, Object> resultMap;
         resultMap = chunkService.deleteChunk(targetIndex, knowledgeName, docId, chunkId);
+        return ResponseEntity.ok().body(resultMap);
+    }
+
+    @PutMapping("/activity")
+    @Operation(summary = "청크 활성여부 변경", description = "Update Chunk Activeness API")
+    public ResponseEntity<?> updateChunkActiveness(
+            @RequestParam(value = "indexName") String indexName,
+            @RequestParam(value = "knowledgeName") String knowledgeName,
+            @RequestParam(value = "docId") String docId,
+            @RequestParam(value = "chunkId") long chunkId,
+            @RequestParam(value = "active") boolean isActive
+    ) throws Exception {
+        Map<String, Object> resultMap;
+        resultMap = chunkService.updateChunkActiveness(indexName, knowledgeName, docId, chunkId, isActive);
         return ResponseEntity.ok().body(resultMap);
     }
 }

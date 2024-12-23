@@ -91,10 +91,13 @@ public class DocumentController {
     @PutMapping("/doc")
     @Operation(summary = "해당 문서 메타데이터 수정", description = "Update Document API")
     public ResponseEntity<?> updateDocument(
-            @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
-            @RequestBody MetadataDTO metadataDTO) {
+            @RequestParam(value = "indexName") String targetIndex,
+            @RequestParam(value = "knowledgeName") String knowledgeName,
+            @RequestParam(value = "docId") String docId,
+            @RequestParam(value = "description") String description
+    ) {
         Map<String, Object> resultMap;
-        resultMap = documentService.updateDocument(targetIndex, metadataDTO);
+        resultMap = documentService.updateDocument(targetIndex, knowledgeName, docId, description);
         return ResponseEntity.ok().body(resultMap);
     }
 
@@ -106,6 +109,19 @@ public class DocumentController {
             @RequestParam(value = "docId") String docId) {
         Map<String, Object> resultMap;
         resultMap = documentService.deleteDocument(targetIndex, knowledgeName, docId);
+        return ResponseEntity.ok().body(resultMap);
+    }
+
+    @PutMapping("/doc/activity")
+    @Operation(summary = "해당 문서 활성여부 변경", description = "Update Document Activeness API")
+    public ResponseEntity<?> updateDocumentActiveness(
+            @RequestParam(value = "indexName") String targetIndex,
+            @RequestParam(value = "knowledgeName") String knowledgeName,
+            @RequestParam(value = "docId") String docId,
+            @RequestParam(value = "active") boolean isActive
+    ) {
+        Map<String, Object> resultMap;
+        resultMap = documentService.updateDocument(targetIndex, knowledgeName, docId, isActive);
         return ResponseEntity.ok().body(resultMap);
     }
 }

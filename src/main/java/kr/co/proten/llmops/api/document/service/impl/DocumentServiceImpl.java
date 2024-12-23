@@ -2,7 +2,6 @@ package kr.co.proten.llmops.api.document.service.impl;
 
 import kr.co.proten.llmops.api.document.dto.DocumentDTO;
 import kr.co.proten.llmops.api.document.dto.MetadataDTO;
-import kr.co.proten.llmops.api.document.dto.ProcessingResult;
 import kr.co.proten.llmops.api.document.entity.Document;
 import kr.co.proten.llmops.api.document.entity.Metadata;
 import kr.co.proten.llmops.api.document.repository.opensearch.OpenSearchDocumentRepository;
@@ -238,14 +237,18 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Map<String, Object> updateDocument(String index, MetadataDTO metadataDTO){
+    public Map<String, Object> updateDocument(String indexName, String knowledgeName, String docId, Object object){
         Map<String, Object> result = new HashMap<>();
-        String res = openSearchDocumentRepository.updateDocMetadataByDocId(index, metadataDTO.getDocId(), convertToMap(MetadataDTO.toMetadata(metadataDTO)));
+        Metadata metadata = openSearchDocumentRepository.getDocMetadataByDocId(indexName, knowledgeName, docId);
+
+        updateMetadataFields(metadata, object);
+
+        String updateResponse = openSearchDocumentRepository.updateDocMetadataByDocId(indexName, docId, convertToMap(metadata));
 
         // 결과 반환
         result.put("status", "success");
         result.put("message", "파일 수정 성공");
-        result.put("response", res);
+        result.put("response", updateResponse);
         return result;
     }
 
@@ -262,14 +265,31 @@ public class DocumentServiceImpl implements DocumentService {
 
     private DocumentDTO convertToDTO(Document document) {
         // Document를 DocumentDTO로 변환 (예시)
-        return new DocumentDTO(
-                document.getId(),
-                document.getDocId(),
-                document.getChunkId(),
-                document.getIndex(),
-                document.isActive(),
-                document.getContent(),
-                document.getPage()
-        );
+        return DocumentDTO.builder()
+                .id(document.getId())
+                .docId(document.getDocId())
+                .chunkId(document.getChunkId())
+                .index(document.getIndex())
+                .isActive(document.isActive())
+                .content(document.getContent())
+                .page(document.getPage())
+                .score(document.getScore())
+                .build();
+    }
+
+    /**
+     * 메타데이터 필드를 업데이트하는 메서드.
+     *
+     * @param metadata 수정할 메타데이터 객체
+     * @param object   업데이트할 값 (boolean 또는 String)
+     */
+    private void updateMetadataFields(Metadata metadata, Object object) {
+        if (object instanceof Boolean) {
+            metadata.setActive((Boolean) object);
+        } else if (object instanceof String) {
+            metadata.setDescription((String) object);
+        } else {
+            throw new IllegalArgumentException("Unsupported object type for metadata update: " + object.getClass().getName());
+        }
     }
 }

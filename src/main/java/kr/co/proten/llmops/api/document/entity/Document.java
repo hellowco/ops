@@ -43,4 +43,7 @@ public class Document {
     @JsonProperty("@timestamp")
     @Nullable
     private String timestamp;
+
+    @JsonProperty("_score")
+    private double score;
 }

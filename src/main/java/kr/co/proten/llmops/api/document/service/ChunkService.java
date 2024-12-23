@@ -13,4 +13,6 @@ public interface ChunkService {
     Map<String, Object> updateChunk(String indexName, String knowledgeName, String docId, long chunkId, String content, String modelType) throws Exception;
 
     Map<String, Object> deleteChunk(String indexName, String knowledgeName, String docId, long chunkId) throws Exception;
+
+    Map<String, Object> updateChunkActiveness(String indexName, String knowledgeName, String docId, long chunkId, boolean isActive);
 }

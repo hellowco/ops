@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static kr.co.proten.llmops.core.helpers.MappingLoader.convertToMap;
-import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 
 @Service
 public class ChunkServiceImpl implements ChunkService {
@@ -53,7 +52,7 @@ public class ChunkServiceImpl implements ChunkService {
 
             Document savedDocument = openSearchChunkRepository.saveChunk(indexName, document);
 
-            return createSuccessResult("문서 청크 성공", DocumentDTO.builder().build().fromEntity(savedDocument));
+            return createSuccessResult("문서 청크 성공", DocumentDTO.fromEntity(savedDocument));
         });
     }
 
@@ -61,7 +60,7 @@ public class ChunkServiceImpl implements ChunkService {
     public Map<String, Object> readChunk(String indexName, String knowledgeName, String docId, long chunkId) {
         return executeWithResult(() -> {
             Document document = openSearchChunkRepository.getChunkByChunkId(indexName, knowledgeName, docId, chunkId);
-            return createSuccessResult("문서 청크 가져오기 성공", DocumentDTO.builder().build().fromEntity(document));
+            return createSuccessResult("문서 청크 가져오기 성공", DocumentDTO.fromEntity(document));
         });
     }
 
@@ -89,6 +88,17 @@ public class ChunkServiceImpl implements ChunkService {
         });
     }
 
+    @Override
+    public Map<String, Object> updateChunkActiveness(String indexName, String knowledgeName, String docId, long chunkId, boolean isActive) {
+        return executeWithResult(() -> {
+            Document document = openSearchChunkRepository.getChunkByChunkId(indexName, knowledgeName, docId, chunkId);
+            document.setActive(isActive);
+
+            String response = openSearchChunkRepository.updateChunkByChunkId(indexName, docId, convertToMap(document));
+            return createSuccessResult("문서 청크 상태 수정 성공", response);
+        });
+    }
+
     private Metadata getAndUpdateMetadata(String indexName, String knowledgeName, String docId) {
         Metadata metadata = openSearchDocumentRepository.getDocMetadataByDocId(indexName, knowledgeName, docId);
         metadata.setChunkNum(metadata.getChunkNum() + 1);
@@ -104,7 +114,7 @@ public class ChunkServiceImpl implements ChunkService {
             result.put("status", "error");
             result.put("message", e.getMessage());
         } catch (Exception e) {
-            log.error("Error occurred", e);
+            log.error("Error occurred: {}", e.getMessage());
             result.put("status", "error");
             result.put("message", "오류 발생: " + e.getMessage());
         }

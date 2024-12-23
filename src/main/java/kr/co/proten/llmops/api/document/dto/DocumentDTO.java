@@ -5,7 +5,10 @@ import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 import kr.co.proten.llmops.api.document.entity.Document;
 
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
+
 @Builder
+@Slf4j
 public record DocumentDTO(
         String id,
         String docId,
@@ -13,7 +16,8 @@ public record DocumentDTO(
         String index,
         boolean isActive,
         String content,
-        long page) {
+        long page,
+        double score) {
 
     public Document toEntity() {
         return Document.builder()
@@ -27,7 +31,8 @@ public record DocumentDTO(
                 .build();
     }
 
-    public DocumentDTO fromEntity(Document document) {
+    public static DocumentDTO fromEntity(Document document) {
+        log.debug("score of document: {}", document.getScore());
         return DocumentDTO.builder()
                 .id(document.getId())
                 .docId(document.getDocId())
@@ -36,6 +41,7 @@ public record DocumentDTO(
                 .isActive(document.isActive())
                 .content(document.getContent())
                 .page(document.getPage())
+                .score(document.getScore())
                 .build();
     }
 }

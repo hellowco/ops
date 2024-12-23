@@ -1,10 +1,6 @@
-package kr.co.proten.llmops.api.index.service;
-
-import org.springframework.web.multipart.MultipartFile;
+package kr.co.proten.llmops.api.knowledge.service;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public interface IndexService {
     boolean createIndexWithMapping(String indexName) throws IOException;

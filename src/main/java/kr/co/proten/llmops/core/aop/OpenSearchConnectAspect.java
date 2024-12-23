@@ -27,8 +27,7 @@ public class OpenSearchConnectAspect {
 
     private static final ThreadLocal<OpenSearchClient> threadLocalClient = new ThreadLocal<>();
 
-    @Around("execution(* kr.co.proten.llmops.api.document.repository.opensearch.*Repository.*(..)) || " +
-            "execution(* kr.co.proten.llmops.api.index.repository.*Repository.*(..))")
+    @Around("execution(* kr.co.proten.llmops.api..repository..*Repository.*(..))") // 각 도메인의 repo 디렉토리 및 하위 디렉토리
     public Object manageConnection(ProceedingJoinPoint joinPoint) throws Throwable {
         OpenSearchClient client = null;
 
@@ -36,15 +35,19 @@ public class OpenSearchConnectAspect {
             // OpenSearch 연결 생성
             client = OpenSearchConfig.createConnection(searchServers, userName, password);
             threadLocalClient.set(client);
-            log.info("OpenSearch connection established for {}", joinPoint.getSignature());
+            log.info("OpenSearch connection established for {}", joinPoint.getSignature().getName());
 
             // 대상 메서드 실행
             return joinPoint.proceed();
+        } catch (Exception e) {
+            log.error("Error occurred during OpenSearch operation in {}: {}",
+                    joinPoint.getSignature(), e.getMessage(), e);
+            throw e; // 예외를 다시 던져 상위 호출자에게 알림
         } finally {
             // OpenSearch 연결 해제
             OpenSearchConfig.closeConnection(client);
             threadLocalClient.remove();
-            log.info("OpenSearch connection closed for {}", joinPoint.getSignature());
+            log.info("OpenSearch connection closed for {}", joinPoint.getSignature().getName());
         }
     }
 

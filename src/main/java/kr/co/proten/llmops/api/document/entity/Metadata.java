@@ -20,6 +20,9 @@ public class Metadata {
     @JsonProperty("index")
     private String index;
 
+    @JsonProperty("description")
+    private String description;
+
     @JsonProperty("isActive")
     private boolean isActive;
 

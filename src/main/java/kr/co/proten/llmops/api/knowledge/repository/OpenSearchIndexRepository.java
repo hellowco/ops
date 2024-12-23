@@ -1,9 +1,8 @@
-package kr.co.proten.llmops.api.index.repository;
+package kr.co.proten.llmops.api.knowledge.repository;
 
 import kr.co.proten.llmops.core.aop.OpenSearchConnectAspect;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
-import org.opensearch.client.opensearch._types.mapping.Property;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -16,12 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static kr.co.proten.llmops.core.helpers.MappingLoader.convertToProperties;
 
 @Repository
 public class OpenSearchIndexRepository {
