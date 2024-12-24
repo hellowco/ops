@@ -1,11 +1,11 @@
 package kr.co.proten.llmops.api.knowledge.repository;
 
+import kr.co.proten.llmops.api.knowledge.entity.KnowledgeEntity;
 import kr.co.proten.llmops.core.aop.OpenSearchConnectAspect;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
-import org.opensearch.client.opensearch.core.SearchRequest;
-import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.DeleteIndexRequest;
@@ -18,9 +18,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
-public class OpenSearchIndexRepository {
+public class OpenSearchKnowledgeRepository {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -119,5 +120,80 @@ public class OpenSearchIndexRepository {
                 .build();
         client.indices().delete(deleteIndexRequest);
         log.info("Index deleted: {}", indexName);
+    }
+
+    public List<KnowledgeEntity> findAllKnowledge(String indexName) throws IOException {
+        // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(indexName)
+                .query(q -> q.matchAll(m -> m))
+                .build();
+
+        SearchResponse<KnowledgeEntity> response = client.search(searchRequest, KnowledgeEntity.class);
+
+        return response.hits().hits().stream()
+                .map(Hit::source)
+                .collect(Collectors.toList());
+    }
+
+    public String saveKnowledge(String indexName, KnowledgeEntity entity) throws IOException {
+        // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        IndexRequest<KnowledgeEntity> indexRequest = new IndexRequest.Builder<KnowledgeEntity>()
+                .id(entity.getId())
+                .index(indexName)
+                .document(entity)
+                .build();
+
+        IndexResponse response = client.index(indexRequest);
+        return response.id();
+    }
+
+    public KnowledgeEntity findById(String indexName, String id) throws IOException {
+        // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        GetRequest getRequest = new GetRequest.Builder()
+                .index(indexName)
+                .id(id)
+                .build();
+
+        GetResponse<KnowledgeEntity> response = client.get(getRequest, KnowledgeEntity.class);
+
+        if (response.found()) {
+            return response.source();
+        } else {
+            return null; // 문서를 찾지 못한 경우 null 반환
+        }
+    }
+
+    public String updateKnowledge(String indexName, String id, KnowledgeEntity entity) throws IOException {
+        // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        UpdateRequest<KnowledgeEntity, KnowledgeEntity> updateRequest = new UpdateRequest.Builder<KnowledgeEntity, KnowledgeEntity>()
+                .index(indexName)
+                .id(id)
+                .doc(entity) // 수정된 내용 적용
+                .build();
+
+        UpdateResponse<KnowledgeEntity> response = client.update(updateRequest, KnowledgeEntity.class);
+        return response.id(); // 업데이트된 문서 ID 반환
+    }
+
+    public String deleteKnowledge(String indexName, String id) throws IOException {
+        // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        DeleteRequest deleteRequest = new DeleteRequest.Builder()
+                .index(indexName)
+                .id(id)
+                .build();
+
+        DeleteResponse response = client.delete(deleteRequest);
+        return response.id();
     }
 }

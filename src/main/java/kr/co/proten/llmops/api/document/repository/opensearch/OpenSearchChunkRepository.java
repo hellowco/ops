@@ -105,6 +105,12 @@ public class OpenSearchChunkRepository implements ChunkRepository {
                         .must(m -> m.term(t -> t.field(FIELD_DOC_ID).value(FieldValue.of(docId))))
                         .must(m -> m.term(t -> t.field(FIELD_CHUNK_ID).value(FieldValue.of(chunkId))))))
                 .size(1)
+                .source(s -> s
+                        .filter(f -> f
+                                .includes("*")
+                                .excludes("content_vec")
+                        )
+                )
                 .build();
     }
 
@@ -175,7 +181,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
                                 .value(FieldValue.of(docId))
                         )
                 )
-                .size(1) // 첫 번째 결과만 필요
+                .size(1) // 첫 번째 결과만 필요`
                 .build();
 
         SearchResponse<Map<String, Object>> response = client.search(searchRequest, (Class<Map<String, Object>>) (Class<?>) Map.class);
