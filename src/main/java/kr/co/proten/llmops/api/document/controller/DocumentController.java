@@ -28,6 +28,19 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
+    @GetMapping("/doc/list")
+    @Operation(summary = "문서 리스트 보기 (해당 인덱스에 있는 모든 문서)", description = "Document List API")
+    public ResponseEntity<?> getDocumentList(
+            @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
+            @RequestParam(value = "indexName", defaultValue = "test") String knowledgeName,
+            @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
+            @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) throws Exception {
+        Map<String, Object> resultMap;
+        resultMap = documentService.getDocumentList(targetIndex, knowledgeName, pageNo, pageSize);
+
+        return ResponseEntity.ok().body(resultMap);
+    }
+
     @GetMapping("/doc/{docId}")
     @Operation(summary = "문서 보기 (문서의 모든 청크 리스트)", description = "Document Chunk List API")
     public ResponseEntity<?> getDocumentDetail(

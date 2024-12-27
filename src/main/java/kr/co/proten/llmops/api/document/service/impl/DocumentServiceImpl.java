@@ -184,6 +184,37 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Map<String, Object> getDocumentList(String index, String knowledgeName, int pageNo, int pageSize) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        // Validate page params
+        int adjustedPageNo = (pageNo <= 1) ? 0 : pageNo - 1;
+        int adjustedPageSize = Math.max(pageSize, 1);
+
+        List<Metadata> metadataList= openSearchDocumentRepository.getDocumentList(index, knowledgeName, adjustedPageNo, adjustedPageSize);
+
+        List<MetadataDTO> metadataDTOList = (metadataList == null || metadataList.isEmpty())
+                ? Collections.emptyList()
+                : metadataList.stream()
+                .map(MetadataDTO::of)
+                .toList();
+
+        log.info("converted documents: {}", metadataDTOList);
+
+        // 결과 반환
+        if(!metadataDTOList.isEmpty()){
+            result.put("status", "success");
+            result.put("message", "파일 데이터 리스트 가져오기 성공");
+            result.put("response", metadataDTOList);
+        } else {
+            result.put("status", "failed");
+            result.put("message", "파일 데이터 리스트 가져오기 실패");
+            result.put("response", metadataDTOList);
+        }
+
+        return result;
+    }
+
+    @Override
     public Map<String, Object> getDocument(String index, String knowledgeName, String docId, int pageNo, int pageSize) throws Exception{
         Map<String, Object> result = new HashMap<>();
         // Validate page params

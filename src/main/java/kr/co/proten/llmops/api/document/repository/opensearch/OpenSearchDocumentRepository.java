@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
-
 /**
  * The type Document repository.
  */
@@ -32,6 +30,59 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
 
     private final String FIELD_INDEX = "index";
     private final String FIELD_DOC_ID = "docId";
+
+    @Override
+    public List<Metadata> getDocumentList(String indexName, String knowledgeName, int pageNo, int pageSize) {
+        final String metaIndexName = indexName + "_metadata";
+
+        try {
+            OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+
+            // SearchRequest 생성
+            SearchRequest searchRequest = new SearchRequest.Builder()
+                    .index(metaIndexName)
+                    .query(q -> q
+                            .bool(b -> b
+                                    .filter(f -> f
+                                            .term(t -> t
+                                                    .field(FIELD_INDEX)
+                                                    .value(FieldValue.of(knowledgeName))
+                                            )
+                                    )
+                            )
+                    )
+                    .source(s -> s
+                            .filter(f -> f
+                                    .includes("*")
+                            )
+                    )
+                    .sort(s -> s
+                            .field(sf -> sf
+                                    .field("index.keyword")
+                                    .order(SortOrder.Asc) // 오름차순 정렬
+                            )
+                    )
+                    .from(pageNo * pageSize) // 페이지
+                    .size(pageSize) // 한 번에 가져올 문서 수
+                    .build();
+
+            // 요청 실행
+            SearchResponse<Metadata> response = client.search(searchRequest, Metadata.class);
+
+            // 결과 처리
+            List<Metadata> metadataList = new ArrayList<>();
+            for (Hit<Metadata> hit : response.hits().hits()) {
+                metadataList.add(hit.source());
+            }
+
+            return metadataList;
+        } catch (NoSuchElementException e) { // 검색 실패 잡기
+            throw e;
+        } catch (Exception e) { // 검색 실패 외 다른 에러 잡기
+            throw new RuntimeException("Error retrieving metadata for: " + knowledgeName, e);
+        }
+    }
 
     /**
      * 해당하는 문서 번호의 청크된 리스트를 가져오기

@@ -11,6 +11,8 @@ public interface DocumentService {
 
     Map<String, Object> uploadDocument(String targetIndex, String knowledgeName, String fileName, int chunkSize, int overlapSize, String modelType, List<String> processingKeys) throws Exception;
 
+    Map<String, Object> getDocumentList(String index, String knowledgeName, int pageNo, int pageSize) throws Exception;
+
     Map<String, Object> getDocument(String index, String knowledgeName, String docId, int pageNo, int pageSize) throws Exception;
 
     Map<String, Object> getDocumentMetadata(String index, String knowledgeName, String docId) throws Exception;

@@ -9,6 +9,7 @@ import java.util.Map;
 public interface DocumentRepository {
 
     boolean saveDocument(String indexName, List<Document> documents, Metadata metadata);
+    List<Metadata> getDocumentList(String indexName, String knowledgeName, int pageNo, int pageSize);
     List<Document> getDocByDocId(String indexName, String knowledgeName, String docId, int pageNo, int pageSize);
     Metadata getDocMetadataByDocId(String indexName, String knowledgeName, String docId);
     String updateDocMetadataByDocId(String indexName, String docId, Map<String, Object> updatedFields);
