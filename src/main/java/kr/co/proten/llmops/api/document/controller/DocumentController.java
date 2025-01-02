@@ -32,7 +32,7 @@ public class DocumentController {
     @Operation(summary = "문서 리스트 보기 (해당 인덱스에 있는 모든 문서)", description = "Document List API")
     public ResponseEntity<?> getDocumentList(
             @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
-            @RequestParam(value = "indexName", defaultValue = "test") String knowledgeName,
+            @RequestParam(value = "knowledgeName", defaultValue = "test") String knowledgeName,
             @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) throws Exception {
         Map<String, Object> resultMap;
@@ -46,7 +46,7 @@ public class DocumentController {
     public ResponseEntity<?> getDocumentDetail(
             @PathVariable("docId") String docId,
             @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
-            @RequestParam(value = "indexName", defaultValue = "test") String knowledgeName,
+            @RequestParam(value = "knowledgeName", defaultValue = "test") String knowledgeName,
             @RequestParam(value = "pageNo", defaultValue = "1") int pageNo,
             @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) throws Exception {
         Map<String, Object> resultMap;
@@ -60,7 +60,7 @@ public class DocumentController {
     public ResponseEntity<?> getDocumentMetadata(
             @PathVariable("docId") String docId,
             @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
-            @RequestParam(value = "indexName", defaultValue = "test") String knowledgeName) throws Exception {
+            @RequestParam(value = "knowledgeName", defaultValue = "test") String knowledgeName) throws Exception {
         Map<String, Object> resultMap;
         resultMap = documentService.getDocumentMetadata(targetIndex, knowledgeName, docId);
 
@@ -83,7 +83,7 @@ public class DocumentController {
     public ResponseEntity<?> indexDocument(
             @RequestParam(value = "fileName", defaultValue = "test.txt") String fileName,
             @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
-            @RequestParam(value = "indexName", defaultValue = "test") String knowledgeName,
+            @RequestParam(value = "knowledgeName", defaultValue = "test") String knowledgeName,
             @RequestParam(value = "chunkSize", defaultValue = "200") int chunkSize,
             @RequestParam(value = "overlapSize", defaultValue = "50") int overlapSize,
             @RequestParam(value = "modelType", defaultValue = "ProsLLM") String modelType,
@@ -104,7 +104,7 @@ public class DocumentController {
     @PutMapping("/doc")
     @Operation(summary = "해당 문서 메타데이터 수정", description = "Update Document API")
     public ResponseEntity<?> updateDocument(
-            @RequestParam(value = "indexName") String targetIndex,
+            @RequestParam(value = "modelName") String targetIndex,
             @RequestParam(value = "knowledgeName") String knowledgeName,
             @RequestParam(value = "docId") String docId,
             @RequestParam(value = "description") String description
@@ -118,7 +118,7 @@ public class DocumentController {
     @Operation(summary = "해당 문서 삭제", description = "Delete Document API")
     public ResponseEntity<?> deleteDocument(
             @RequestParam(value = "modelName", defaultValue = "llmops") String targetIndex,
-            @RequestParam(value = "indexName", defaultValue = "test") String knowledgeName,
+            @RequestParam(value = "knowledgeName", defaultValue = "test") String knowledgeName,
             @RequestParam(value = "docId") String docId) {
         Map<String, Object> resultMap;
         resultMap = documentService.deleteDocument(targetIndex, knowledgeName, docId);
@@ -128,7 +128,7 @@ public class DocumentController {
     @PutMapping("/doc/activity")
     @Operation(summary = "해당 문서 활성여부 변경", description = "Update Document Activeness API")
     public ResponseEntity<?> updateDocumentActiveness(
-            @RequestParam(value = "indexName") String targetIndex,
+            @RequestParam(value = "modelName") String targetIndex,
             @RequestParam(value = "knowledgeName") String knowledgeName,
             @RequestParam(value = "docId") String docId,
             @RequestParam(value = "active") boolean isActive

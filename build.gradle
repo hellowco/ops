@@ -40,7 +40,6 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-openai-spring-boot-starter'
 
     // Opensearch
-    //implementation "org.opensearch.client:opensearch-rest-high-level-client:${opensearchVersion}"
     implementation 'org.opensearch.client:opensearch-rest-client:2.18.0'
     implementation 'org.opensearch.client:opensearch-java:2.6.0'
 
