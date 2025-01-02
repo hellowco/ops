@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -25,9 +24,7 @@ public class SearchController {
     }
 
     @PostMapping
-    public ResponseEntity<?> search(
-            @RequestBody(required = false) SearchRequestDTO searchRequestDTO
-    ) {
+    public ResponseEntity<?> search(@RequestBody(required = false) SearchRequestDTO searchRequestDTO) {
         Map<String, Object> resultMap;
 
         log.info("searchrequest: {}", searchRequestDTO);

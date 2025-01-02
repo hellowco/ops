@@ -50,14 +50,14 @@ public class SearchServiceImpl implements SearchService {
             float keywordWeight = searchRequestDTO.keywordWeight().orElse(DefaultKeywordWeight);
             float vectorWeight = searchRequestDTO.vectorWeight().orElse(DefaultVectorWeight);
             int k = searchRequestDTO.k().orElse(DefaultKnnK);
-            documentList = ((HybridSearchProcessor) searchProcessor).search(searchRequestDTO.indexName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), keywordWeight, vectorWeight, k);
+            documentList = ((HybridSearchProcessor) searchProcessor).search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), keywordWeight, vectorWeight, k);
         } else if (searchProcessor instanceof KeywordSearchProcessor) {
             printLog(searchRequestDTO, searchProcessor);
-            documentList = ((KeywordSearchProcessor) searchProcessor).search(searchRequestDTO.indexName(), searchRequestDTO.knowledgeName(), searchRequestDTO.query());
+            documentList = ((KeywordSearchProcessor) searchProcessor).search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.query());
         } else if (searchProcessor instanceof VectorSearchProcessor) {
             printLog(searchRequestDTO, searchProcessor);
             int k = searchRequestDTO.k().orElse(DefaultKnnK);
-            documentList = ((VectorSearchProcessor) searchProcessor).search(searchRequestDTO.indexName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), k);
+            documentList = ((VectorSearchProcessor) searchProcessor).search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), k);
         } else {
             throw new UnsupportedOperationException("지원하지 않는 검색 프로세서 타입: " + searchProcessor.getServiceType());
         }

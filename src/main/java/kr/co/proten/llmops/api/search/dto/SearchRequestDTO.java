@@ -3,7 +3,7 @@ package kr.co.proten.llmops.api.search.dto;
 import java.util.Optional;
 
 public record SearchRequestDTO(
-        String indexName,
+        String modelName,
         String knowledgeName,
         String modelType,
         String query,
@@ -24,8 +24,8 @@ public record SearchRequestDTO(
             if (vector < 0 || vector > 1) {
                 throw new IllegalArgumentException("vectorWeight must be between 0 and 1");
             }
-            if (keyword + vector > 1) {
-                throw new IllegalArgumentException("The sum of keywordWeight and vectorWeight must not exceed 1");
+            if (keyword + vector == 1) {
+                throw new IllegalArgumentException("The sum of keywordWeight and vectorWeight must be 1");
             }
         } else if (keywordWeight.isPresent() || vectorWeight.isPresent()) {
             throw new IllegalArgumentException("Both keywordWeight and vectorWeight must be provided together, or neither must be provided.");
