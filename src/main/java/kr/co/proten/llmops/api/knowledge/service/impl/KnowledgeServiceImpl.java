@@ -92,12 +92,16 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         Map<String, Object> result = new HashMap<>();
 
         try {
+            //TODO:: modelName에 해당하는 인덱스가 오픈서치에 없으면 생성해야함.
+            // 현재 인덱스 mapping되는데 settings가 안되어서 구현 추후로 미룸
+
             KnowledgeEntity entity = KnowledgeEntity.builder()
                     .id(UUIDGenerator.generateUUID())
                     .modelName(modelName)
                     .knowledgeName(knowledgeName)
                     .description(description)
                     .build();
+
 
             String response_id = openSearchKnowledgeRepository.saveKnowledge(indexName, entity);
             result.put("status", "success");
