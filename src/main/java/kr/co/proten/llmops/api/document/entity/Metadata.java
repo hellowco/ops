@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -27,10 +29,10 @@ public class Metadata {
     private boolean isActive;
 
     @JsonProperty("lastUpdatedDate")
-    private String lastUpdatedDate;
+    private LocalDateTime lastUpdatedDate;
 
     @JsonProperty("convertDate")
-    private String convertDate;
+    private LocalDateTime convertDate;
 
     @JsonProperty("orgFileName")
     private String orgFileName;

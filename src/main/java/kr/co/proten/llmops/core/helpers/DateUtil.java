@@ -8,18 +8,13 @@ import java.time.format.DateTimeFormatter;
  */
 public class DateUtil {
     /**
-     * Generate current timestamp in string.
+     * 현재시간을 생성해서 반환하는 메서드
+     * 추후 시간값을 변경할 수 있는 경우, 메서드 수정
      *
-     * @return the string
+     * @return LocalDateTime 현재시간 (YYYY-MM-DD HH:mm:ss 형식)
      */
-    public static String generateCurrentTimestamp() {
+    public static LocalDateTime generateCurrentTimestamp() {
         // 현재 시간 가져오기 (서버 시간 기준)
-        LocalDateTime now = LocalDateTime.now();
-
-        // OpenSearch 날짜 형식에 맞는 포맷
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
-
-        // 포맷된 문자열 반환
-        return now.format(formatter);
+        return LocalDateTime.now();
     }
 }
