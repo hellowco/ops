@@ -20,6 +20,7 @@ import static kr.co.proten.llmops.core.helpers.MappingLoader.loadMappingFromReso
 @Service
 public class KnowledgeServiceImpl implements KnowledgeService {
 
+    public static final String KNOWLEDGE_METADATA = "knowledge_metadata";
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final OpenSearchKnowledgeRepository openSearchKnowledgeRepository;
@@ -39,7 +40,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         try {
             openSearchKnowledgeRepository.createIndex(indexName, contentMapping);
             openSearchKnowledgeRepository.createIndex(metaIndexName, metadataMapping);
-        } catch (IOException e) {
+        } catch (Exception e) {
             openSearchKnowledgeRepository.deleteIndex(indexName);
             openSearchKnowledgeRepository.deleteIndex(metaIndexName);
             throw new IOException("Error while creating index", e);
@@ -56,24 +57,24 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         try {
             openSearchKnowledgeRepository.deleteIndex(indexName);
             openSearchKnowledgeRepository.deleteIndex(metaIndexName);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new IOException("Error while deleting index", e);
         }
+
         return true;
     }
 
     @Override
     public Map<String, Object> getKnowledgeList() {
-        final String indexName = "knowledge_metadata";
         Map<String, Object> result = new HashMap<>();
 
         try {
-            List<KnowledgeEntity> entities = openSearchKnowledgeRepository.findAllKnowledge(indexName);
+            List<KnowledgeEntity> entities = openSearchKnowledgeRepository.findAllKnowledge(KNOWLEDGE_METADATA);
 
 
             List<KnowledgeDTO> knowledgeDTOList = entities.stream()
                     .map(this::toDTO)
-                    .collect(Collectors.toList());
+                    .toList();
 
             // 결과 반환
             result.put("status", "success");
@@ -87,19 +88,17 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     @Override
     public Map<String, Object> createKnowledge(String modelName,String knowledgeName,String description) {
-        final String indexName = "knowledge_metadata";
-
         Map<String, Object> result = new HashMap<>();
 
-        try {
-            KnowledgeEntity entity = KnowledgeEntity.builder()
-                    .id(UUIDGenerator.generateUUID())
-                    .modelName(modelName)
-                    .knowledgeName(knowledgeName)
-                    .description(description)
-                    .build();
+        KnowledgeEntity entity = KnowledgeEntity.builder()
+                .id(UUIDGenerator.generateUUID())
+                .modelName(modelName)
+                .knowledgeName(knowledgeName)
+                .description(description)
+                .build();
 
-            String response_id = openSearchKnowledgeRepository.saveKnowledge(indexName, entity);
+        try {
+            String response_id = openSearchKnowledgeRepository.saveKnowledge(KNOWLEDGE_METADATA, entity);
             result.put("status", "success");
             result.put("message", "지식 생성 성공");
             result.put("response", response_id);
@@ -111,12 +110,11 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     @Override
     public Map<String, Object> updateKnowledge(String id, String description) {
-        final String indexName = "knowledge_metadata";
         Map<String, Object> result = new HashMap<>();
 
         try {
             // ID로 문서 조회
-            KnowledgeEntity entity = openSearchKnowledgeRepository.findById(indexName, id);
+            KnowledgeEntity entity = openSearchKnowledgeRepository.findById(KNOWLEDGE_METADATA, id);
 
             if (entity == null) {
                 result.put("status", "error");
@@ -128,7 +126,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
             entity.setDescription(description);
 
             // 업데이트된 문서 저장
-            String res = openSearchKnowledgeRepository.updateKnowledge(indexName, id, entity);
+            String res = openSearchKnowledgeRepository.updateKnowledge(KNOWLEDGE_METADATA, id, entity);
 
             result.put("status", "success");
             result.put("message", "지식 수정 성공");
@@ -141,11 +139,10 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     @Override
     public Map<String, Object> deleteKnowledge(String id) {
-        final String indexName = "knowledge_metadata";
         Map<String, Object> result = new HashMap<>();
 
         try {
-            String res = openSearchKnowledgeRepository.deleteKnowledge(indexName, id);
+            String res = openSearchKnowledgeRepository.deleteKnowledge(KNOWLEDGE_METADATA, id);
 
             result.put("status", "success");
             result.put("message", "지식 삭제 성공");

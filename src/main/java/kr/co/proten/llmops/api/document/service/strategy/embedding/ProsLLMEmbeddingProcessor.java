@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Component
@@ -65,12 +66,12 @@ public class ProsLLMEmbeddingProcessor implements EmbeddingProcessor {
 
             // Send the JSON payload
             try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = jsonPayload.toString().getBytes("utf-8");
+                byte[] input = jsonPayload.toString().getBytes(StandardCharsets.UTF_8);
                 os.write(input, 0, input.length);
             }
 
             // Read the response
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
                 StringBuilder response = new StringBuilder();
                 String responseLine;
                 while ((responseLine = br.readLine()) != null) {

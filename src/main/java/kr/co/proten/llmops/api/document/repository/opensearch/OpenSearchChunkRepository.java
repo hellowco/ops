@@ -38,8 +38,8 @@ public class OpenSearchChunkRepository implements ChunkRepository {
 
             IndexResponse response = client.index(request);
             validateResponse(response.result(), "save document");
-
             updateMetadata(indexName, convertToMap(document), client);
+
             return document;
         }, "Error saving chunk");
     }
@@ -48,6 +48,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
     public Document getChunkByChunkId(String indexName, String knowledgeName, String docId, long chunkId) {
         return handleOpenSearchOperation(() -> {
             SearchRequest request = buildSearchRequest(indexName, knowledgeName, docId, chunkId);
+
             return executeSearch(request).stream()
                     .findFirst()
                     .orElseThrow(() -> new NoSuchElementException("No document found for chunkId: " + chunkId));
@@ -77,10 +78,11 @@ public class OpenSearchChunkRepository implements ChunkRepository {
             if (response.result() != Result.Updated && response.result() != Result.NoOp) {
                 throw new RuntimeException("Failed to update chunk. Result: " + response.result());
             }
+
             log.info("Chunk successfully updated: {}", response.result());
             validateResponse(response.result(), "update document");
-
             updateMetadata(indexName, updatedFields, client);
+
             return response.result().toString();
         }, "Error updating chunk");
     }
@@ -93,6 +95,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
 
             DeleteByQueryResponse response = client.deleteByQuery(request);
             log.info("Deleted {} documents from {}", response.deleted(), indexName);
+
             return null;
         }, "Error deleting chunk");
     }
@@ -132,12 +135,14 @@ public class OpenSearchChunkRepository implements ChunkRepository {
         for (Hit<Document> hit : response.hits().hits()) {
             documents.add(hit.source());
         }
+
         return documents;
     }
 
     private String findChunkId(String indexName, Map<String, Object> updatedFields) throws Exception {
         SearchRequest searchRequest = buildSearchRequest(indexName, updatedFields.get(FIELD_INDEX).toString(),
                 updatedFields.get(FIELD_DOC_ID).toString(), Long.parseLong(updatedFields.get(FIELD_CHUNK_ID).toString()));
+
         return executeSearch(searchRequest).get(0).getId();
     }
 
@@ -193,7 +198,6 @@ public class OpenSearchChunkRepository implements ChunkRepository {
             return null;
         }
     }
-
 
     private void validateResponse(Result result, String operation) {
         if (result != Result.Created && result != Result.Updated) {

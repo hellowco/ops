@@ -36,6 +36,7 @@ public class VectorSearch implements VectorSearchProcessor {
         List<Double> doubleList = embeddingProcessor.embed(query);
         log.info("query embedded as {}", doubleList.get(0));
         AtomicInteger index = new AtomicInteger(0);
+
         float[] vectorQuery = doubleList.stream()
                 .map(Double::floatValue)
                 .collect(() -> new float[doubleList.size()],

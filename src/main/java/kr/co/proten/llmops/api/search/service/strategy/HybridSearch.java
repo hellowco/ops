@@ -35,9 +35,6 @@ public class HybridSearch implements HybridSearchProcessor {
         log.info("list of vector document: {}", vectorResults);
 
         // 결과 조합 로직
-        List<DocumentDTO> combinedResults = rrfMerger.merge(keywordResults,vectorResults, keywordWeight, vectorWeight);
-
-        return combinedResults;
-//        return List.of();
+        return rrfMerger.merge(keywordResults,vectorResults, keywordWeight, vectorWeight);
     }
 }

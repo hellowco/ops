@@ -50,6 +50,7 @@ public class FileStorageService {
         // 파일 저장
         Files.copy(file.getInputStream(), targetPath);
         log.info("File uploaded to: " + targetPath);
+
         return targetPath.toFile();
     }
 }
