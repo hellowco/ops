@@ -45,19 +45,24 @@ public class SearchServiceImpl implements SearchService {
                 .orElseThrow(() -> new UnsupportedOperationException("지원하지 않는 검색 타입: " + searchRequestDTO.searchType()));
 
         List<DocumentDTO> documentList;
-        if (searchProcessor instanceof HybridSearchProcessor) {
-            printLog(searchRequestDTO, searchProcessor);
+        if (searchProcessor instanceof HybridSearchProcessor hybridSearchProcessor) {
+            printLog(searchRequestDTO, hybridSearchProcessor);
+
             float keywordWeight = searchRequestDTO.keywordWeight().orElse(DefaultKeywordWeight);
             float vectorWeight = searchRequestDTO.vectorWeight().orElse(DefaultVectorWeight);
             int k = searchRequestDTO.k().orElse(DefaultKnnK);
-            documentList = ((HybridSearchProcessor) searchProcessor).search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), keywordWeight, vectorWeight, k);
-        } else if (searchProcessor instanceof KeywordSearchProcessor) {
-            printLog(searchRequestDTO, searchProcessor);
-            documentList = ((KeywordSearchProcessor) searchProcessor).search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.query());
-        } else if (searchProcessor instanceof VectorSearchProcessor) {
-            printLog(searchRequestDTO, searchProcessor);
+
+            documentList = hybridSearchProcessor.search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), keywordWeight, vectorWeight, k);
+        } else if (searchProcessor instanceof KeywordSearchProcessor keywordSearchProcessor) {
+            printLog(searchRequestDTO, keywordSearchProcessor);
+
+            documentList = keywordSearchProcessor.search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.query());
+        } else if (searchProcessor instanceof VectorSearchProcessor vectorSearchProcessor) {
+            printLog(searchRequestDTO, vectorSearchProcessor);
+
             int k = searchRequestDTO.k().orElse(DefaultKnnK);
-            documentList = ((VectorSearchProcessor) searchProcessor).search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), k);
+
+            documentList = vectorSearchProcessor.search(searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), k);
         } else {
             throw new UnsupportedOperationException("지원하지 않는 검색 프로세서 타입: " + searchProcessor.getServiceType());
         }

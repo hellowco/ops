@@ -97,12 +97,12 @@ public class TextExtractor {
             // 프로세스가 완료될 때까지 대기
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                log.info("Executable with arguments launched successfully. Output saved to: " + resultFile.getAbsolutePath());
+                log.info("Executable with arguments launched successfully. Output saved to: {}", resultFile.getAbsolutePath());
             } else {
-                log.info("Executable failed with exit code: " + exitCode);
+                log.info("Executable failed with exit code: {}", exitCode);
             }
         } catch (IOException | InterruptedException e) {
-            log.info("Failed to launch executable: " + e.getMessage());
+            log.info("Failed to launch executable: {}", e.getMessage());
         } finally {
             // 임시 파일 삭제
             tempExeFile.delete();

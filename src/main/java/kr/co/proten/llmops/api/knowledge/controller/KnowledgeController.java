@@ -6,8 +6,6 @@ import kr.co.proten.llmops.api.knowledge.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,43 +33,50 @@ public class KnowledgeController {
 
     @PostMapping("/")
     @Operation(summary = "지식 추가", description = "Create Knowledge API")
-    public ResponseEntity<?> createKnowledge(
+    public ResponseEntity<Map<String,Object>> createKnowledge(
             @RequestParam(value = "modelName") String indexName,
             @RequestParam(value = "knowledgeName") String knowledgeName,
             @RequestParam(value = "description") String description
     ) throws Exception {
         Map<String, Object> resultMap;
+
         resultMap = knowledgeService.createKnowledge(indexName, knowledgeName, description);
+
         return ResponseEntity.ok().body(resultMap);
     }
 
     @GetMapping("/")
     @Operation(summary = "지식 리스트", description = "Knowledge List API")
-    public ResponseEntity<?> getKnowledgeList() {
-
+    public ResponseEntity<Map<String,Object>> getKnowledgeList() {
         Map<String, Object> resultMap;
+
         resultMap = knowledgeService.getKnowledgeList();
+
         return ResponseEntity.ok().body(resultMap);
     }
 
     @PutMapping("/")
     @Operation(summary = "지식 수정", description = "Update Knowledge API")
-    public ResponseEntity<?> updateKnowledge(
+    public ResponseEntity<Map<String,Object>> updateKnowledge(
             @RequestParam(value = "knowledgeId") String knowledgeId,
             @RequestParam(value = "description") String description
     ) throws Exception {
         Map<String, Object> resultMap;
+
         resultMap = knowledgeService.updateKnowledge(knowledgeId, description);
+
         return ResponseEntity.ok().body(resultMap);
     }
 
     @DeleteMapping("/")
     @Operation(summary = "지식 삭제", description = "Delete Knowledge API")
-    public ResponseEntity<?> deleteKnowledge(
+    public ResponseEntity<Map<String,Object>> deleteKnowledge(
             @RequestParam(value = "knowledgeId") String knowledgeId
     ) throws Exception {
         Map<String, Object> resultMap;
+
         resultMap = knowledgeService.deleteKnowledge(knowledgeId);
+
         return ResponseEntity.ok().body(resultMap);
     }
 

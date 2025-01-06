@@ -24,11 +24,12 @@ public class SearchController {
     }
 
     @PostMapping
-    public ResponseEntity<?> search(@RequestBody(required = false) SearchRequestDTO searchRequestDTO) {
+    public ResponseEntity<Map<String,Object>> search(@RequestBody(required = false) SearchRequestDTO searchRequestDTO) {
         Map<String, Object> resultMap;
 
         log.info("searchrequest: {}", searchRequestDTO);
         resultMap = searchService.search(searchRequestDTO);
+
         return ResponseEntity.ok().body(resultMap);
     }
 }

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -139,7 +140,7 @@ public class DocumentServiceImpl implements DocumentService {
             log.info("파일 임베딩 시작");
             List<List<Double>> embeddings = chunks.parallelStream()
                     .map(embeddingProcessor::embed)
-                    .collect(Collectors.toList());
+                    .toList();
             log.info("파일 임베딩 완료");
             log.info("{}", embeddings.get(0));
 
@@ -315,10 +316,10 @@ public class DocumentServiceImpl implements DocumentService {
      * @param object   업데이트할 값 (boolean 또는 String)
      */
     private void updateMetadataFields(Metadata metadata, Object object) {
-        if (object instanceof Boolean) {
-            metadata.setActive((Boolean) object);
-        } else if (object instanceof String) {
-            metadata.setDescription((String) object);
+        if (object instanceof Boolean bool) {
+            metadata.setActive(bool);
+        } else if (object instanceof String str) {
+            metadata.setDescription(str);
         } else {
             throw new IllegalArgumentException("Unsupported object type for metadata update: " + object.getClass().getName());
         }

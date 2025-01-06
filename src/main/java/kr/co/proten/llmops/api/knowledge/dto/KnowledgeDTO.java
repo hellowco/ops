@@ -8,6 +8,4 @@ public record KnowledgeDTO(
         String modelName,
         String knowledgeName,
         String description
-) {
-
-}
+) {}

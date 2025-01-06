@@ -1,6 +1,5 @@
 package kr.co.proten.llmops.api.document.service;
 
-import kr.co.proten.llmops.api.document.dto.MetadataDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

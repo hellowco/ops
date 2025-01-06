@@ -73,23 +73,24 @@ public class OpenSearchKnowledgeRepository {
      * @return the doc id and doc name by index
      */
     public List<Map<String, String>> getDocIdAndDocNameByIndex(String indexName, String knowledgeName) {
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        // SearchRequest 생성
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(indexName)
+                .query(q -> q
+                        .term(t -> t
+                                .field("index.keyword")
+                                .value(FieldValue.of(knowledgeName))
+                        )
+                )
+                .source(s -> s
+                        .filter(f -> f.includes("docId", "docName")) // docId와 docName 필드만 반환
+                )
+                .build();
+
         try {
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-            // SearchRequest 생성
-            SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(indexName)
-                    .query(q -> q
-                            .term(t -> t
-                                    .field("index.keyword")
-                                    .value(FieldValue.of(knowledgeName))
-                            )
-                    )
-                    .source(s -> s
-                            .filter(f -> f.includes("docId", "docName")) // docId와 docName 필드만 반환
-                    )
-                    .build();
-
             // 요청 실행
             SearchResponse<Object> response = client.search(searchRequest, Object.class);
 
@@ -111,15 +112,20 @@ public class OpenSearchKnowledgeRepository {
         }
     }
 
-    public void deleteIndex(String indexName) throws IOException {
+    public void deleteIndex(String indexName) {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
         DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest.Builder()
                 .index(indexName)
                 .build();
-        client.indices().delete(deleteIndexRequest);
-        log.info("Index deleted: {}", indexName);
+
+        try {
+            client.indices().delete(deleteIndexRequest);
+            log.info("Index deleted: {}", indexName);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while deleting index: ", e);
+        }
     }
 
     public List<KnowledgeEntity> findAllKnowledge(String indexName) throws IOException {
@@ -131,11 +137,15 @@ public class OpenSearchKnowledgeRepository {
                 .query(q -> q.matchAll(m -> m))
                 .build();
 
-        SearchResponse<KnowledgeEntity> response = client.search(searchRequest, KnowledgeEntity.class);
+        try{
+            SearchResponse<KnowledgeEntity> response = client.search(searchRequest, KnowledgeEntity.class);
 
-        return response.hits().hits().stream()
-                .map(Hit::source)
-                .collect(Collectors.toList());
+            return response.hits().hits().stream()
+                    .map(Hit::source)
+                    .toList();
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving knowledge list: ", e);
+        }
     }
 
     public String saveKnowledge(String indexName, KnowledgeEntity entity) throws IOException {
@@ -148,8 +158,13 @@ public class OpenSearchKnowledgeRepository {
                 .document(entity)
                 .build();
 
-        IndexResponse response = client.index(indexRequest);
-        return response.id();
+        try {
+            IndexResponse response = client.index(indexRequest);
+
+            return response.id();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while saving knowledge: ", e);
+        }
     }
 
     public KnowledgeEntity findById(String indexName, String id) throws IOException {
@@ -161,12 +176,16 @@ public class OpenSearchKnowledgeRepository {
                 .id(id)
                 .build();
 
-        GetResponse<KnowledgeEntity> response = client.get(getRequest, KnowledgeEntity.class);
+        try {
+            GetResponse<KnowledgeEntity> response = client.get(getRequest, KnowledgeEntity.class);
 
-        if (response.found()) {
-            return response.source();
-        } else {
-            return null; // 문서를 찾지 못한 경우 null 반환
+            if (response.found()) {
+                return response.source();
+            } else {
+                return null; // 문서를 찾지 못한 경우 null 반환
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving knowledge by id: ", e);
         }
     }
 
@@ -180,8 +199,12 @@ public class OpenSearchKnowledgeRepository {
                 .doc(entity) // 수정된 내용 적용
                 .build();
 
-        UpdateResponse<KnowledgeEntity> response = client.update(updateRequest, KnowledgeEntity.class);
-        return response.id(); // 업데이트된 문서 ID 반환
+        try{
+            UpdateResponse<KnowledgeEntity> response = client.update(updateRequest, KnowledgeEntity.class);
+            return response.id(); // 업데이트된 문서 ID 반환
+        } catch (Exception e) {
+            throw new RuntimeException("Error while updating knowledge: ", e);
+        }
     }
 
     public String deleteKnowledge(String indexName, String id) throws IOException {
@@ -193,7 +216,12 @@ public class OpenSearchKnowledgeRepository {
                 .id(id)
                 .build();
 
-        DeleteResponse response = client.delete(deleteRequest);
-        return response.id();
+        try {
+            DeleteResponse response = client.delete(deleteRequest);
+            return response.id();
+        } catch (Exception e) {
+            throw new RuntimeException("Error while deleting knowledge: ", e);
+        }
     }
+
 }
