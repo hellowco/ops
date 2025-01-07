@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static kr.co.proten.llmops.core.helpers.MappingLoader.loadMappingFromResources;
 
@@ -99,8 +98,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .description(description)
                 .build();
 
-
-try {
+        try {
             String response_id = openSearchKnowledgeRepository.saveKnowledge(KNOWLEDGE_METADATA, entity);
             result.put("status", "success");
             result.put("message", "지식 생성 성공");
