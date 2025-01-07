@@ -3,15 +3,16 @@ package kr.co.proten.llmops.api.app.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.co.proten.llmops.api.workspace.entity.WorkspaceEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "apps")
 @Builder
+@Getter
+@Setter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class AppEntity {
@@ -20,7 +21,7 @@ public class AppEntity {
     @Column(name = "app_id")
     private String appId;
 
-    @ManyToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id")
     private WorkspaceEntity workspace;
 

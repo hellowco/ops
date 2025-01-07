@@ -3,12 +3,18 @@ package kr.co.proten.llmops.api.workspace.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.co.proten.llmops.api.app.entity.AppEntity;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "workspaces")
 public class WorkspaceEntity {
 

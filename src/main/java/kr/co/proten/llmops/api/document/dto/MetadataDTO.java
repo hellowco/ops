@@ -4,6 +4,8 @@ import kr.co.proten.llmops.api.document.entity.Metadata;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 public class MetadataDTO {
@@ -12,8 +14,8 @@ public class MetadataDTO {
     private String index;
     private String description;
     private String isActive;
-    private String lastUpdatedDate;
-    private String convertDate;
+    private LocalDateTime lastUpdatedDate;
+    private LocalDateTime convertDate;
     private String orgFileName;
     private String orgFilePath;
     private long totalPage;
