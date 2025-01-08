@@ -3,13 +3,15 @@ package kr.co.proten.llmops.api.app.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.proten.llmops.api.app.dto.request.AppCreateDTO;
-import kr.co.proten.llmops.api.app.dto.request.AppUpdateDTO;
 import kr.co.proten.llmops.api.app.dto.request.AppSearchDTO;
+import kr.co.proten.llmops.api.app.dto.request.AppStateDTO;
+import kr.co.proten.llmops.api.app.dto.request.AppUpdateDTO;
 import kr.co.proten.llmops.api.app.service.AppService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Tag(name = "App", description = "앱 생성, 검색, 수정, 삭제하는 API")
@@ -42,13 +44,14 @@ public class AppController {
     @GetMapping("/{app_id}")
     @Operation(summary = "하나의 앱 반환", description = "앱 ID로 앱 객체 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAppById(
-            @PathVariable String app_id
+            @PathVariable(value = "app_id") String appId,
+            @RequestParam(value = "workspace_id", defaultValue = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7") String workspaceId
     ) {
         Map<String, Object> resultMap = new HashMap<>();
 
         resultMap.put("status", SUCCESS);
-        resultMap.put("msg", String.format("앱 %s 반환 성공!", app_id));
-        resultMap.put("response", appService.getAppById(app_id));
+        resultMap.put("msg", String.format("앱 %s 반환 성공!", appId));
+        resultMap.put("response", appService.getAppById(workspaceId, appId));
 
         return ResponseEntity.ok(resultMap);
     }
@@ -56,29 +59,33 @@ public class AppController {
     @GetMapping
     @Operation(summary = "워크스페이스 내의 모든 앱 리스트", description = "워크스페이스 ID로 앱 객체 리스트 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAllApps(
-            @RequestParam String workspaceId
+            @RequestParam(value = "workspace_id", defaultValue = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7") String workspaceId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "18") int size,
+            @RequestParam(value = "sort_field", defaultValue = "createdAt") String sortField,
+            @RequestParam(value = "sort_by", defaultValue = "desc") String sortBy
     ) {
         Map<String, Object> resultMap = new HashMap<>();
 
         resultMap.put("status", SUCCESS);
         resultMap.put("msg", String.format("워크스페이스: %s의 앱리스트 반환 성공!", workspaceId));
-        resultMap.put("response", appService.getAllApps(workspaceId));
+        resultMap.put("response", appService.getAllApps(workspaceId, page, size, sortField, sortBy));
 
         return ResponseEntity.ok(resultMap);
     }
 
-//    @PostMapping("/search")
-//    public ResponseEntity<Map<String, Object>> getAppByName(
-//            @RequestBody AppSearchDTO appSearchDTO
-//    ) {
-//        Map<String, Object> resultMap = new HashMap<>();
-//
-//        resultMap.put("status", SUCCESS);
-//        resultMap.put("msg", String.format("%s으로 검색된 앱 반환 성공!", appSearchDTO.name()));
-////        resultMap.put("response", appService.getAppByName(appSearchDTO));
-//
-//        return ResponseEntity.ok(resultMap);
-//    }
+    @PostMapping("/search")
+    public ResponseEntity<Map<String, Object>> getAppByName(
+            @RequestBody AppSearchDTO appSearchDTO
+    ) {
+        Map<String, Object> resultMap = new HashMap<>();
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", String.format("%s으로 검색된 앱 반환 성공!", appSearchDTO.name()));
+        resultMap.put("response", appService.getAppByName(appSearchDTO));
+
+        return ResponseEntity.ok(resultMap);
+    }
 
     @PutMapping
     @Operation(summary = "앱 수정", description = "앱 ID로 앱 수정후, 앱 객체 반환하는 API")
@@ -94,17 +101,46 @@ public class AppController {
         return ResponseEntity.ok(resultMap);
     }
 
-    @DeleteMapping("/{app_id}")
-    @Operation(summary = "앱 삭제", description = "앱 ID로 앱 삭제하는 API, 앱 ID가 없는거여도 삭제되었다고 나옴.")
-    public ResponseEntity<Map<String, Object>> deleteApp(
-            @PathVariable String app_id
+    @PutMapping("/active")
+    @Operation(summary = "앱 활성여부 변경", description = "앱 ID로 해당 앱의 활성/비활성 여부 변경")
+    public ResponseEntity<Map<String, Object>> updateDocumentActiveness(
+            @RequestBody AppStateDTO appStateDTO
     ) {
         Map<String, Object> resultMap = new HashMap<>();
 
         resultMap.put("status", SUCCESS);
-        resultMap.put("msg", String.format("앱 %s 삭제 성공!", app_id));
-        resultMap.put("response", appService.deleteApp(app_id));
+        resultMap.put("msg", String.format("앱 %s 상태 변경성공!", appStateDTO.app_id()));
+        resultMap.put("response", appService.updateAppState(appStateDTO));
 
         return ResponseEntity.ok(resultMap);
     }
+
+    @DeleteMapping("/{app_id}")
+    @Operation(summary = "앱 삭제", description = "앱 ID로 앱 삭제하는 API, 앱 ID가 없는거여도 삭제되었다고 나옴.")
+    public ResponseEntity<Map<String, Object>> deleteApp(
+            @PathVariable(value = "app_id") String appId
+    ) {
+        Map<String, Object> resultMap = new HashMap<>();
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", String.format("앱 %s 삭제 성공!", appId));
+        resultMap.put("response", appService.deleteApp(appId));
+
+        return ResponseEntity.ok(resultMap);
+    }
+
+    @DeleteMapping
+    @Operation(summary = "앱 리스트 삭제", description = "앱 ID를 리스트로 받아서 여러 앱을 삭제하는 API, 앱 ID가 없는거여도 삭제되었다고 나옴.")
+    public ResponseEntity<Map<String, Object>> deleteAppList(
+            @RequestParam(value = "app_id_list") List<String> appIdList
+    ) {
+        Map<String, Object> resultMap = new HashMap<>();
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", "앱 리스트 삭제 성공!");
+        resultMap.put("response", appService.deleteAppList(appIdList));
+
+        return ResponseEntity.ok(resultMap);
+    }
+
 }

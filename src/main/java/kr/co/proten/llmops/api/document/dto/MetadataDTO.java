@@ -14,8 +14,8 @@ public class MetadataDTO {
     private String index;
     private String description;
     private String isActive;
-    private LocalDateTime lastUpdatedDate;
-    private LocalDateTime convertDate;
+    private String lastUpdatedDate;
+    private String convertDate;
     private String orgFileName;
     private String orgFilePath;
     private long totalPage;

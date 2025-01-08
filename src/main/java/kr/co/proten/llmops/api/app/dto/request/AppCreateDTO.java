@@ -20,7 +20,4 @@ public record AppCreateDTO(
         @Schema(description = "앱 설명", example = "기본적인 Naive RAG")
         String description
 ) {
-//        public static AppCreateDTO createDefault(String name, String description) {
-//                return new AppCreateDTO(generateUUID(), name, description, generateCurrentTimestamp(), null, true);
-//        }
 }
