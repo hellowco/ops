@@ -2,9 +2,9 @@ package kr.co.proten.llmops.api.document.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.Nullable;
 import lombok.*;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 @NoArgsConstructor

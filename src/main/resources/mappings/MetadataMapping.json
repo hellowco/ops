@@ -29,12 +29,12 @@
       },
       "lastUpdatedDate": {
         "type": "date",
-        "format": "yyyyMMddHHmmssSSS||yyyyMMddHHmmss||yyyyMMdd",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd HH:mm:ss.SSS||strict_date_optional_time",
         "ignore_malformed": true
       },
       "convertDate": {
         "type": "date",
-        "format": "yyyyMMddHHmmssSSS||yyyyMMddHHmmss||yyyyMMdd",
+        "format": "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd HH:mm:ss.SSS||strict_date_optional_time",
         "ignore_malformed": true
       },
       "orgFileName": {

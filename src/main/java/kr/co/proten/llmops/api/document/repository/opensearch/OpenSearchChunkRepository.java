@@ -162,7 +162,7 @@ public class OpenSearchChunkRepository implements ChunkRepository {
         UpdateRequest<Map<String, Object>, Map<String, Object>> request = new UpdateRequest.Builder<Map<String, Object>, Map<String, Object>>()
                 .index(metadataIndex)
                 .id(metadataId)
-                .doc(Collections.singletonMap("lastUpdatedDate", DateUtil.generateCurrentTimestamp()))
+                .doc(Collections.singletonMap("lastUpdatedDate", DateUtil.generateCurrentTimestamp4OpenSearch()))
                 .build();
 
         // OpenSearch 업데이트 실행

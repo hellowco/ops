@@ -1,6 +1,6 @@
 package kr.co.proten.llmops.api.document.dto;
 
-import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
+import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID4Doc;
 
 import kr.co.proten.llmops.api.document.entity.Document;
 
@@ -21,7 +21,7 @@ public record DocumentDTO(
 
     public Document toEntity() {
         return Document.builder()
-                .id(generateUUID())
+                .id(generateUUID4Doc())
                 .docId(this.docId)
                 .chunkId(this.chunkId)
                 .index(this.index)

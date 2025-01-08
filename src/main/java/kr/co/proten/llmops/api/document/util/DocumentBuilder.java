@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
+import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID4Doc;
 
 public class DocumentBuilder {
     public Document createDocument(
@@ -64,7 +65,7 @@ public class DocumentBuilder {
     ) {
         return Document.builder()
             .index(knowledgeName)
-            .id(generateUUID())
+            .id(generateUUID4Doc())
             .docId(docId)
             .chunkId(chunkId)
             .content(content)
@@ -87,8 +88,8 @@ public class DocumentBuilder {
                 .docId(docId)
                 .index(knowledgeName)
                 .isActive(true)
-                .lastUpdatedDate(DateUtil.generateCurrentTimestamp())
-                .convertDate(DateUtil.generateCurrentTimestamp())
+                .lastUpdatedDate(DateUtil.generateCurrentTimestamp4OpenSearch())
+                .convertDate(DateUtil.generateCurrentTimestamp4OpenSearch())
                 .orgFileName(filename)
                 .orgFilePath(filepath)
                 .totalPage(0)

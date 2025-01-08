@@ -255,7 +255,7 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
                 String documentId = response.hits().hits().get(0).id();
 
                 // 마지막 업데이트 시간 반영
-                updatedFields.put("lastUpdatedDate", DateUtil.generateCurrentTimestamp());
+                updatedFields.put("lastUpdatedDate", DateUtil.generateCurrentTimestamp4OpenSearch());
 
                 // UpdateRequest 생성
                 UpdateRequest updateRequest = new UpdateRequest.Builder()

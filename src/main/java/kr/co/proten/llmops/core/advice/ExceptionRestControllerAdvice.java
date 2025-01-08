@@ -1,16 +1,32 @@
-package kr.co.proten.llmops.core.exception;
+package kr.co.proten.llmops.core.advice;
 
+import kr.co.proten.llmops.core.exception.FileStorageException;
+import kr.co.proten.llmops.core.exception.MaxUploadSizeExceededException;
+import kr.co.proten.llmops.core.exception.UnsupportedFileExtensionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.result.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
-public class GlobalExceptionHandler {
+@RestControllerAdvice(basePackages = {
+        "kr.co.proten.llmops.api.app.controller"
+})
+public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandler {
+
+    private static final String FAIL = "fail";
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
@@ -43,8 +59,7 @@ public class GlobalExceptionHandler {
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> errorDetails = new HashMap<>();
         errorDetails.put("timestamp", LocalDateTime.now());
-        errorDetails.put("status", status.value());
-        errorDetails.put("error", status.getReasonPhrase());
+        errorDetails.put("status", FAIL);
         errorDetails.put("message", message);
 
         return new ResponseEntity<>(errorDetails, status);
