@@ -1,4 +1,4 @@
-package kr.co.proten.llmops.api.app.entity;
+package kr.co.proten.llmops.api.workflow.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +19,8 @@ public class WorkflowEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "graph", columnDefinition = "jsonb")
+    @NotNull
+    @Column(name = "graph", columnDefinition = "jsonb", nullable = false)
     @Convert(converter = JsonConverter.class)
     private Map<String, Object> graph;
 
