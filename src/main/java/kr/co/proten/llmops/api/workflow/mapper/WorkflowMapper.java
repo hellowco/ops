@@ -13,9 +13,9 @@ public interface WorkflowMapper {
 
     WorkflowEntity toEntity(WorkflowDto dto);
 
-    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-    WorkflowEntity toEntityForCreate(WorkflowDto dto);
-
-    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-    WorkflowEntity updateEntityFromDto(WorkflowDto dto, @MappingTarget WorkflowEntity entity);
+//    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+//    WorkflowEntity toEntityForCreate(WorkflowDto dto);
+//
+//    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
+//    WorkflowEntity updateEntityFromDto(WorkflowDto dto, @MappingTarget WorkflowEntity entity);
 }

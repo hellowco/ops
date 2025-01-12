@@ -2,6 +2,7 @@ package kr.co.proten.llmops.api.app.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
 import kr.co.proten.llmops.api.workspace.entity.WorkspaceEntity;
 import lombok.*;
 
@@ -25,7 +26,7 @@ public class AppEntity {
     @JoinColumn(name = "workspace_id")
     private WorkspaceEntity workspace;
 
-    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "workflow_id")
     private WorkflowEntity workflow;
 

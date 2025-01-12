@@ -1,0 +1,297 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "1735867385578",
+        "type": "custom",
+        "data": {
+          "type": "start",
+          "title": "시작",
+          "desc": "",
+          "variables": [
+            {
+              "variable": "query",
+              "label": "queryLabel",
+              "type": "text-input",
+              "max_length": 48,
+              "required": true,
+              "options": []
+            },
+            {
+              "variable": "systemPrompt",
+              "label": "systemPrompt",
+              "type": "text-input",
+              "max_length": 48,
+              "required": false,
+              "options": []
+            },
+            {
+              "variable": "select",
+              "label": "select",
+              "type": "select",
+              "max_length": 48,
+              "required": true,
+              "options": [
+                "1",
+                "2",
+                "3"
+              ]
+            }
+          ],
+          "selected": false
+        },
+        "position": {
+          "x": 80,
+          "y": 282
+        },
+        "targetPosition": "left",
+        "sourcePosition": "right",
+        "positionAbsolute": {
+          "x": 80,
+          "y": 282
+        },
+        "width": 243,
+        "height": 115,
+        "selected": false
+      },
+      {
+        "id": "1735867390736",
+        "type": "custom",
+        "data": {
+          "type": "knowledge-retrieval",
+          "title": "지식 검색",
+          "desc": "",
+          "query_variable_selector": [
+            "1735867385578",
+            "query"
+          ],
+          "dataset_ids": [
+            "c2b08cf6-fae1-464d-b681-c17d8a6c5c7d"
+          ],
+          "retrieval_mode": "multiple",
+          "multiple_retrieval_config": {
+            "top_k": 4,
+            "reranking_mode": "reranking_model",
+            "reranking_enable": false
+          },
+          "selected": false
+        },
+        "position": {
+          "x": 402,
+          "y": 283
+        },
+        "targetPosition": "left",
+        "sourcePosition": "right",
+        "positionAbsolute": {
+          "x": 402,
+          "y": 283
+        },
+        "width": 243,
+        "height": 91,
+        "selected": false
+      },
+      {
+        "id": "1735867392736",
+        "type": "custom",
+        "data": {
+          "type": "llm",
+          "title": "LLM",
+          "desc": "",
+          "variables": [],
+          "model": {
+            "provider": "ollama",
+            "name": "llama3.1:8b",
+            "mode": "chat",
+            "completion_params": {
+              "temperature": 0.7,
+              "top_p": 0.9,
+              "top_k": 1,
+              "repeat_penalty": -2,
+              "num_predict": 512,
+              "mirostat": 0,
+              "mirostat_eta": 0,
+              "mirostat_tau": 0,
+              "num_ctx": 2048
+            }
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "{{#1735867385578.systemPrompt#}}",
+              "id": "64d95237-4e13-4ea5-a544-641b1ea55455"
+            },
+            {
+              "role": "user",
+              "text": "아래 내용을 보고 질문에 답해줘\n{{#1735867385578.query#}}\n{{#context#}}",
+              "id": "246aa6f6-2dd7-4676-85ee-6befe188641c"
+            }
+          ],
+          "context": {
+            "enabled": true,
+            "variable_selector": [
+              "1735867390736",
+              "result"
+            ]
+          },
+          "vision": {
+            "enabled": false
+          },
+          "selected": false
+        },
+        "position": {
+          "x": 680,
+          "y": 282
+        },
+        "targetPosition": "left",
+        "sourcePosition": "right",
+        "positionAbsolute": {
+          "x": 680,
+          "y": 282
+        },
+        "width": 243,
+        "height": 97,
+        "selected": false
+      },
+      {
+        "id": "1735867395193",
+        "type": "custom",
+        "data": {
+          "type": "end",
+          "title": "끝",
+          "desc": "",
+          "outputs": [
+            {
+              "variable": "text",
+              "value_selector": [
+                "1735867392736",
+                "text"
+              ]
+            }
+          ],
+          "selected": true
+        },
+        "position": {
+          "x": 969,
+          "y": 287
+        },
+        "targetPosition": "left",
+        "sourcePosition": "right",
+        "positionAbsolute": {
+          "x": 969,
+          "y": 287
+        },
+        "width": 243,
+        "height": 89,
+        "selected": true
+      }
+    ],
+    "edges": [
+      {
+        "id": "1735867385578-source-1735867390736-target",
+        "type": "custom",
+        "source": "1735867385578",
+        "target": "1735867390736",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "start",
+          "targetType": "knowledge-retrieval",
+          "isInIteration": false
+        },
+        "zIndex": 0
+      },
+      {
+        "id": "1735867390736-source-1735867392736-target",
+        "type": "custom",
+        "source": "1735867390736",
+        "target": "1735867392736",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "knowledge-retrieval",
+          "targetType": "llm",
+          "isInIteration": false
+        },
+        "zIndex": 0
+      },
+      {
+        "id": "1735867392736-source-1735867395193-target",
+        "type": "custom",
+        "source": "1735867392736",
+        "target": "1735867395193",
+        "sourceHandle": "source",
+        "targetHandle": "target",
+        "data": {
+          "sourceType": "llm",
+          "targetType": "end",
+          "isInIteration": false
+        },
+        "zIndex": 0
+      }
+    ],
+    "viewport": {
+      "x": -46,
+      "y": 76,
+      "zoom": 1
+    }
+  },
+  "features": {
+    "opening_statement": "",
+    "suggested_questions": [],
+    "suggested_questions_after_answer": {
+      "enabled": false
+    },
+    "text_to_speech": {
+      "enabled": false,
+      "voice": "",
+      "language": ""
+    },
+    "speech_to_text": {
+      "enabled": false
+    },
+    "retriever_resource": {
+      "enabled": true
+    },
+    "sensitive_word_avoidance": {
+      "enabled": false
+    },
+    "file_upload": {
+      "image": {
+        "enabled": false,
+        "number_limits": 3,
+        "transfer_methods": [
+          "local_file",
+          "remote_url"
+        ]
+      },
+      "enabled": false,
+      "allowed_file_types": [
+        "image"
+      ],
+      "allowed_file_extensions": [
+        ".JPG",
+        ".JPEG",
+        ".PNG",
+        ".GIF",
+        ".WEBP",
+        ".SVG"
+      ],
+      "allowed_file_upload_methods": [
+        "local_file",
+        "remote_url"
+      ],
+      "number_limits": 3,
+      "fileUploadConfig": {
+        "file_size_limit": 15,
+        "batch_count_limit": 5,
+        "image_file_size_limit": 10,
+        "video_file_size_limit": 100,
+        "audio_file_size_limit": 50,
+        "workflow_file_upload_limit": 10
+      }
+    }
+  },
+  "environment_variables": [],
+  "conversation_variables": [],
+  "hash": "8f14e693037397e66ae77a7a1028781782a74a1e8da587da3f5e89f8e34d5eff"
+}

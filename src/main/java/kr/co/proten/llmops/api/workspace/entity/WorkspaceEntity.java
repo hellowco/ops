@@ -19,6 +19,7 @@ import java.util.List;
 public class WorkspaceEntity {
 
     @Id
+    @Column(name = "workspace_id")
     private String workspaceId;
 
     @NotNull
