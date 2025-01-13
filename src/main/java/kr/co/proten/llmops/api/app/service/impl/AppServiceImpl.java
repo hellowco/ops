@@ -183,7 +183,6 @@ public class AppServiceImpl implements AppService {
         if (workspaceId == null) return null;
         return WorkspaceEntity
                 .builder()
-                .name("8ee589ef-c7bb-4f2a-a773-630abd0de8c7")
                 .name("다락방")
                 .description("테스트용 더미 데이터")
                 .tokenLimit(50000)

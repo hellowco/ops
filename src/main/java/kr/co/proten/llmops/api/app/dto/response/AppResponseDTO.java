@@ -13,6 +13,7 @@ public class AppResponseDTO {
     private String appId;
     private String name;
     private String description;
+    private String workflowId;
     private String createdAt;
     private String updatedAt;
     private boolean isActive;

@@ -58,7 +58,8 @@ public class WorkspaceEntity {
     @PrePersist
     public void prePersist() { // 최초 저장시 실행
         if (this.workspaceId == null) {
-            this.workspaceId = generateUUID();
+//            this.workspaceId = generateUUID();
+            this.workspaceId = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7";
         }
         this.createdAt = generateCurrentTimestamp();
         this.isActive = true;
