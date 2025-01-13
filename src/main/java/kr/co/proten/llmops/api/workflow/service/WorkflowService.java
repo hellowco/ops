@@ -14,7 +14,5 @@ public interface WorkflowService {
 
     WorkflowResponseDTO updateWorkflow(WorkflowUpdateDTO workflowDto);
 
-    void deleteWorkflow(String workflowId);
-
     void executeWorkflow(String workflowId);
 }

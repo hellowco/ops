@@ -1,13 +1,9 @@
 package kr.co.proten.llmops.api.workflow.repository;
 
-import kr.co.proten.llmops.api.workflow.dto.FlowEdge;
-import kr.co.proten.llmops.api.workflow.dto.FlowNode;
 import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public interface WorkflowRepository extends JpaRepository<WorkflowEntity, String> {

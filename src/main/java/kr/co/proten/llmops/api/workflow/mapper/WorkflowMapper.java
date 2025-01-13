@@ -7,7 +7,6 @@ import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
 import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 import java.util.Map;
 
@@ -23,6 +22,7 @@ public interface WorkflowMapper {
     WorkflowResponseDTO toDto(WorkflowEntity entity);
 
     // Custom mapping methods
+    @SuppressWarnings("unchecked")
     default Map<String, Object> mapStringToMap(String value) {
         if (value == null) {
             return null;

@@ -102,14 +102,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public void deleteWorkflow(String workflowId) {
-        if (!workflowRepository.existsById(workflowId)) {
-            throw new RuntimeException("Workflow not found");
-        }
-        workflowRepository.deleteById(workflowId);
-    }
-
-    @Override
     public void executeWorkflow(String workflowId) {
 //        List<FlowNode> nodeList = getNodes(workflowId);
 //        List<FlowEdge> edgeList = getEdges(workflowId);
