@@ -1,8 +1,6 @@
 package kr.co.proten.llmops.core.advice;
 
-import kr.co.proten.llmops.core.exception.FileStorageException;
-import kr.co.proten.llmops.core.exception.MaxUploadSizeExceededException;
-import kr.co.proten.llmops.core.exception.UnsupportedFileExtensionException;
+import kr.co.proten.llmops.core.exception.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -14,6 +12,7 @@ import org.springframework.web.reactive.result.method.annotation.ResponseEntityE
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice(basePackages = {
         "kr.co.proten.llmops.api.app.controller"
@@ -21,7 +20,16 @@ import java.util.Map;
 public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandler {
 
     private static final String FAIL = "fail";
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @ExceptionHandler(UnsupportedFileExtensionException.class)
+    public ResponseEntity<Object> handleUnsupportedFileExtensionException(UnsupportedFileExtensionException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(UnsupportedModelException.class)
+    public ResponseEntity<Object> handleUnsupportedModelException(UnsupportedModelException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
@@ -30,11 +38,6 @@ public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandle
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-
-    @ExceptionHandler(UnsupportedFileExtensionException.class)
-    public ResponseEntity<Object> handleUnsupportedFileExtensionException(UnsupportedFileExtensionException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
@@ -48,10 +51,24 @@ public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandle
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(StateChangeException.class)
+    public ResponseEntity<Object> handleStateChangeException(StateChangeException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidInputException.class)
+    public ResponseEntity<Object> handleInvalidInputException(InvalidInputException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     // 기타 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGeneralException(Exception ex) {
-//        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 

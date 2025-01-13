@@ -14,9 +14,10 @@ public class FlowNode {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NodeData {
         private String desc; // 설명
-        private String type; // 노드 타입 (e.g., start, knowledge-retrieval)
+        // start는 1개고, end는 여러개 가능
+        private String type; // 노드 타입 (e.g., start, knowledge-retrieval) <- 분기
         private String title; // 노드 제목
-        private boolean selected; // 선택 여부
+        private boolean selected; // 선택 여부 true -> 패널창
 //        private List<Variable> variables; // 노드의 변수 리스트
 
 //        @Data

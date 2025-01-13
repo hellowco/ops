@@ -6,6 +6,8 @@ import kr.co.proten.llmops.api.workspace.service.WorkspaceService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Transactional
 public class WorkspaceServiceImpl implements WorkspaceService {
@@ -16,8 +18,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         this.workspaceRepository = workspaceRepository;
     }
 
-    @Transactional
+
     @Override
+    @Transactional(readOnly = true)
+    public Optional<WorkspaceEntity> findWorkspaceById(String id){
+        return workspaceRepository.findById(id);
+    }
+
+    @Override
+    @Transactional
     public WorkspaceEntity saveWorkspace(WorkspaceEntity workspace) {
         return workspaceRepository.save(workspace);
     }

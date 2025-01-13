@@ -1,21 +1,49 @@
 package kr.co.proten.llmops.api.workflow.mapper;
 
-import kr.co.proten.llmops.api.workflow.dto.WorkflowDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
+import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
 import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.factory.Mappers;
+
+import java.util.Map;
 
 @Mapper(componentModel = "spring")
 public interface WorkflowMapper {
 
-    WorkflowDto toDto(WorkflowEntity entity);
+    // DTO -> Entity
+    @Mapping(target = "graph", source = "graph")
+    WorkflowEntity toEntity(WorkflowUpdateDTO dto);
 
-    WorkflowEntity toEntity(WorkflowDto dto);
+    // Entity -> DTO
+    @Mapping(target = "graph", source = "graph")
+    WorkflowResponseDTO toDto(WorkflowEntity entity);
 
-//    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
-//    WorkflowEntity toEntityForCreate(WorkflowDto dto);
-//
-//    @Mapping(target = "updatedAt", expression = "java(java.time.LocalDateTime.now())")
-//    WorkflowEntity updateEntityFromDto(WorkflowDto dto, @MappingTarget WorkflowEntity entity);
+    // Custom mapping methods
+    default Map<String, Object> mapStringToMap(String value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(value, Map.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to convert String to Map", e);
+        }
+    }
+
+    default String mapMapToString(Map<String, Object> map) {
+        if (map == null) {
+            return null;
+        }
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to convert Map to String", e);
+        }
+    }
 }

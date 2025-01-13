@@ -7,6 +7,7 @@ import kr.co.proten.llmops.api.app.dto.request.AppSearchDTO;
 import kr.co.proten.llmops.api.app.dto.request.AppStateDTO;
 import kr.co.proten.llmops.api.app.dto.request.AppUpdateDTO;
 import kr.co.proten.llmops.api.app.service.AppService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,15 +17,11 @@ import java.util.Map;
 
 @Tag(name = "App", description = "앱 생성, 검색, 수정, 삭제하는 API")
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/app")
 public class AppController {
 
     private final AppService appService;
-
-    public AppController(AppService appService) {
-        this.appService = appService;
-    }
-
     private static final String SUCCESS = "success";
 
     @PostMapping

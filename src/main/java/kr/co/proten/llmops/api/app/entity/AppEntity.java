@@ -8,12 +8,14 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+import static kr.co.proten.llmops.core.helpers.DateUtil.generateCurrentTimestamp;
+import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
+
 @Entity
 @Table(name = "apps")
 @Builder
-@Getter
-@Setter
 @ToString
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class AppEntity {
@@ -30,19 +32,36 @@ public class AppEntity {
     @JoinColumn(name = "workflow_id")
     private WorkflowEntity workflow;
 
+    @Setter
     @NotNull
     @Column(nullable = false)
     private String name;
 
+    @Setter
     private String description;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
 
+    @Setter
     @NotNull
     @Column(nullable = false)
     private boolean isActive;
+
+    @PrePersist
+    public void prePersist() { // 최초 생성시 실행
+        if (this.appId == null) {
+            this.appId = generateUUID();
+        }
+        this.createdAt = generateCurrentTimestamp();
+        this.isActive = true;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = generateCurrentTimestamp(); // 수정 시마다 업데이트 시간 설정
+    }
 }
