@@ -1,6 +1,7 @@
 package kr.co.proten.llmops.api.search.dto;
 
 import groovy.util.logging.Slf4j;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
@@ -99,6 +100,7 @@ public record SearchRequestDTO(
         }
     } //end of validate
 
+    @Hidden
     public float getKeywordWeightAsFloat() {
         try {
             return Float.parseFloat(keywordWeight);
@@ -107,6 +109,7 @@ public record SearchRequestDTO(
         }
     }
 
+    @Hidden
     public float getVectorWeightAsFloat() {
         try {
             return Float.parseFloat(vectorWeight);
@@ -115,6 +118,7 @@ public record SearchRequestDTO(
         }
     }
 
+    @Hidden
     public int getKAsInt() {
         try {
             return Integer.parseInt(k);
@@ -123,6 +127,7 @@ public record SearchRequestDTO(
         }
     }
 
+    @Hidden
     public int getPageAsInt() {
         try {
             return Integer.parseInt(page);
@@ -131,6 +136,7 @@ public record SearchRequestDTO(
         }
     }
 
+    @Hidden
     public int getPageSizeAsInt() {
         try {
             return Integer.parseInt(pageSize);
