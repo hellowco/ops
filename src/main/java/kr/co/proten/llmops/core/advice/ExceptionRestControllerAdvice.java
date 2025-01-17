@@ -13,7 +13,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice(basePackages = {
-        "kr.co.proten.llmops.api.app.controller"
+        "kr.co.proten.llmops.api.app.controller",
+        "kr.co.proten.llmops.api.document.controller",
+        "kr.co.proten.llmops.api.knowledge.controller",
+        "kr.co.proten.llmops.api.search.controller",
+        "kr.co.proten.llmops.api.user.controller",
+        "kr.co.proten.llmops.api.workflow.controller",
+        "kr.co.proten.llmops.api.workspace.controller",
+
 })
 public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandler {
 

@@ -27,14 +27,14 @@ public class HybridSearch implements HybridSearchProcessor {
     public String getServiceType() { return SEARCH_TYPE; }
 
     @Override
-    public List<DocumentDTO> search(String indexName, String knowledgeName, String modelType, String query, float keywordWeight, float vectorWeight, int k) {
+    public List<DocumentDTO> search(String indexName, String knowledgeName, String modelType, String query, float keywordWeight, float vectorWeight, int k, int page, int pageSize) {
         // 키워드와 벡터 결과 조합
-        List<DocumentDTO> keywordResults = keywordSearchProcessor.search(indexName, knowledgeName, query);
+        List<DocumentDTO> keywordResults = keywordSearchProcessor.search(indexName, knowledgeName, query, page, pageSize);
         log.info("list of keyword document: {}", keywordResults);
-        List<DocumentDTO> vectorResults = vectorSearchProcessor.search(indexName, knowledgeName, modelType, query, k);
+        List<DocumentDTO> vectorResults = vectorSearchProcessor.search(indexName, knowledgeName, modelType, query, k, page, pageSize);
         log.info("list of vector document: {}", vectorResults);
 
         // 결과 조합 로직
-        return rrfMerger.merge(keywordResults,vectorResults, keywordWeight, vectorWeight);
+        return rrfMerger.merge(keywordResults,vectorResults, keywordWeight, vectorWeight, pageSize);
     }
 }

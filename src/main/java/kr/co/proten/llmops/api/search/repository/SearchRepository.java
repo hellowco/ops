@@ -10,6 +10,8 @@ import org.opensearch.client.opensearch._types.query_dsl.Operator;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.Highlight;
+import org.opensearch.client.opensearch.core.search.HighlightField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 public class SearchRepository {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public List<Document> keywordSearch(String indexName, String knowledgeName,String query) {
+    public List<Document> keywordSearch(String indexName, String knowledgeName,String query, int page, int pageSize) {
 
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
@@ -32,8 +34,9 @@ public class SearchRepository {
                                 Query.of(mq -> mq
                                         .queryString(sqs -> sqs
                                                 .query(query)
+                                                .analyzer("pro10_kr_noun") //자연어에서 명사만 추출
                                                 .fields("content^2.0", "content.exact^2.0") // Pass fields as a list
-                                                .defaultOperator(Operator.And)
+                                                .defaultOperator(Operator.Or) // 자연어인 경우, and면 결과가 안나올수 있음
                                                 .analyzeWildcard(true)
                                         )
                                 )
@@ -55,6 +58,17 @@ public class SearchRepository {
                 )
         );
 
+        Highlight highlight = Highlight.of(h -> h
+                .fields("content", HighlightField.of(f -> f
+                        .preTags("<em>")  // 하이라이트 시작 태그
+                        .postTags("</em>") // 하이라이트 종료 태그
+                ))
+                .fields("content.exact", HighlightField.of(f -> f
+                        .preTags("<em>")
+                        .postTags("</em>")
+                ))
+        );
+
         SearchRequest searchRequest = SearchRequest.of(r -> r
                 .index(indexName)
                 .query(simpleQueryStringQuery)
@@ -64,6 +78,9 @@ public class SearchRepository {
                                 .excludes("content_vec")
                         )
                 )
+                .highlight(highlight)
+                .size(pageSize)
+                .from(page * pageSize)
         );
 
         log.info("search request: {}", toJson(searchRequest));
@@ -85,7 +102,7 @@ public class SearchRepository {
         }
     }
 
-    public List<Document> vectorSearch(String indexName, String knowledgeName, float[] query, int k) {
+    public List<Document> vectorSearch(String indexName, String knowledgeName, float[] query, int k, int page, int pageSize) {
 
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
@@ -132,6 +149,8 @@ public class SearchRepository {
                                 .excludes("content_vec")
                         )
                 )
+                .size(pageSize)
+                .from(page * pageSize)
         );
 
         log.info("search request: {}", toJson(searchRequest));

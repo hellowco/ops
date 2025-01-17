@@ -24,8 +24,8 @@ public class KeywordSearch implements KeywordSearchProcessor {
     public String getServiceType() { return SEARCH_TYPE; }
 
     @Override
-    public List<DocumentDTO> search(String indexName, String knowledgeName,String query) {
-        List<Document>  documentList = searchRepository.keywordSearch(indexName, knowledgeName, query);
+    public List<DocumentDTO> search(String indexName, String knowledgeName,String query, int page, int pageSize) {
+        List<Document>  documentList = searchRepository.keywordSearch(indexName, knowledgeName, query, page, pageSize);
         return documentList.stream()
                 .map(DocumentDTO::fromEntity)
                 .toList();

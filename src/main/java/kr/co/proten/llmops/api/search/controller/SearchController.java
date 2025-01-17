@@ -1,6 +1,7 @@
 package kr.co.proten.llmops.api.search.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import kr.co.proten.llmops.api.search.dto.SearchRequestDTO;
 import kr.co.proten.llmops.api.search.service.SearchService;
 import lombok.RequiredArgsConstructor;
@@ -24,10 +25,11 @@ public class SearchController {
     private final SearchService searchService;
 
     @PostMapping
-    public ResponseEntity<Map<String,Object>> search(@RequestBody(required = false) SearchRequestDTO searchRequestDTO) {
+    public ResponseEntity<Map<String,Object>> search(@Valid @RequestBody SearchRequestDTO searchRequestDTO) {
         Map<String, Object> resultMap;
 
         log.info("searchrequest: {}", searchRequestDTO);
+        searchRequestDTO.validate();
         resultMap = searchService.search(searchRequestDTO);
 
         return ResponseEntity.ok().body(resultMap);
