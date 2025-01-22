@@ -25,7 +25,7 @@ public class OpenAiConfig {
     @Bean
     public OpenAiChatModel defaultOpenAiChatModel(OpenAiApi openAiApi) {
         OpenAiChatOptions defaultOptions = new OpenAiChatOptions.Builder()
-                .model("gpt-4")
+                .model("gpt-4o")
                 .temperature(0.2)
                 .maxTokens(4096)
                 .build();

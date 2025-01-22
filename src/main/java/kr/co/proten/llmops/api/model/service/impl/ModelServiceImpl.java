@@ -6,8 +6,6 @@ import kr.co.proten.llmops.api.model.service.ChatService;
 import kr.co.proten.llmops.api.model.service.ModelService;
 import kr.co.proten.llmops.api.model.service.factory.ChatFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 

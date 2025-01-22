@@ -8,12 +8,15 @@ import java.util.List;
 public record ModelRequest(
 
         @NotBlank
-        @Schema(description = "모델 제공자", example = "ollama")
+        @Schema(description = "모델 제공자(ollama/openai)", example = "ollama")
         String provider,
 
         @NotBlank
-        @Schema(description = "모델명", example = "llama3.1:8b")
+        @Schema(description = "모델명(EEVE-Ko-Instruct-10.8B-v1.0-Q8_0:latest/gpt-4o", example = "llama3.1:8b")
         String model,
+
+        @Schema(description = "openAI용 apiKey", example = "sk-proj-로 시작하는 본인키")
+        String apiKey,
 
         @NotBlank
         @Schema(description = "시스템 프롬프트", example = "- context XML Node 안에 내용을 기반으로 질문에 대해 정확한 답을 찾고 없으면 \"적절한 답변을 찾을 수 없습니다.\" 이라고 답을 하시오. \n - 답은 한국어로 하며, 창작을 하지 않는다. \n - Question 의 내용을 답변에 인용하지 않고, 동일한 답변을 반복하지 않는다. \n - 꼭, 결론이나 요약된 내용을 답을 하시오.")

@@ -35,7 +35,7 @@ public class ModelController {
                             description = "Successful streaming response",
                             content = @Content(
                                     mediaType = MediaType.TEXT_EVENT_STREAM_VALUE,
-                                    schema = @Schema(implementation = ServerSentEvent.class)
+                                    schema = @Schema(implementation = ChatResponse.class)
                             )
                     ),
                     @ApiResponse(

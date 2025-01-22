@@ -3,34 +3,38 @@ package kr.co.proten.llmops.api.workflow.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.proten.llmops.api.model.dto.response.ChatResponse;
+import kr.co.proten.llmops.api.node.dto.NodeResponse;
 import kr.co.proten.llmops.api.workflow.dto.FlowEdge;
 import kr.co.proten.llmops.api.workflow.dto.FlowNode;
 import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
 import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
+import kr.co.proten.llmops.api.workflow.helper.DAG;
+import kr.co.proten.llmops.api.workflow.helper.DAGValidator;
 import kr.co.proten.llmops.api.workflow.mapper.WorkflowMapper;
 import kr.co.proten.llmops.api.workflow.repository.WorkflowRepository;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
 import kr.co.proten.llmops.core.helpers.MappingLoader;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class WorkflowServiceImpl implements WorkflowService {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final WorkflowRepository workflowRepository;
     private final WorkflowMapper workflowMapper;
@@ -102,17 +106,29 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public void executeWorkflow(String workflowId) {
-        log.info("nodeList = {}", findNodesById(workflowId));
-        log.info("edgeList = {}", findEdgesById(workflowId));
+    public Flux<NodeResponse> executeWorkflow(String workflowId) {
         List<FlowNode> nodeList = findNodesById(workflowId);
         List<FlowEdge> edgeList = findEdgesById(workflowId);
 
-        //create DAG
-        //validate DAG
-        //executeNode
+        DAG dag = new DAG();
 
+        // Add nodes and edges to the DAG
+        for (FlowNode node : nodeList) {
+            dag.addNode(node.getData().getType());
+        }
 
+        for (FlowEdge edge : edgeList) {
+            dag.addEdge(edge.getData().getSourceType(), edge.getData().getTargetType());
+        }
+
+        // Validate DAG
+        DAGValidator validator = new DAGValidator();
+        if (validator.hasCycle(dag.getGraph())) {
+            throw new IllegalStateException("Workflow contains a cycle, DAG cannot be created");
+        }
+
+        DAGExecutor executor = new DAGExecutor();
+        return executor.executeDAG(dag);
     }
 
     /**
@@ -152,5 +168,4 @@ public class WorkflowServiceImpl implements WorkflowService {
             throw new RuntimeException("Error converting JSON to List<FlowEdge>", e);
         }
     }
-
 } // end of class

@@ -2,11 +2,15 @@ package kr.co.proten.llmops.api.workflow.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.proten.llmops.api.model.dto.response.ChatResponse;
+import kr.co.proten.llmops.api.node.dto.NodeResponse;
 import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +47,13 @@ public class WorkflowController {
         resultMap.put("response", workflowService.updateWorkflow(workflowDto));
 
         return ResponseEntity.ok(resultMap);
+    }
+
+    @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "워크플로우 실행", description = "워크플로우 ID로 워크플로우(그래프) 실행")
+    public Flux<NodeResponse> executeWorkflow (
+            @RequestParam String workflowId) {
+        return workflowService.executeWorkflow(workflowId);
     }
 
 }
