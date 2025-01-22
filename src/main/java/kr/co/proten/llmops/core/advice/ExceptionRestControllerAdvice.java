@@ -12,19 +12,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-@RestControllerAdvice(basePackages = {
-        "kr.co.proten.llmops.api.app.controller",
-        "kr.co.proten.llmops.api.document.controller",
-        "kr.co.proten.llmops.api.knowledge.controller",
-        "kr.co.proten.llmops.api.search.controller",
-        "kr.co.proten.llmops.api.user.controller",
-        "kr.co.proten.llmops.api.workflow.controller",
-        "kr.co.proten.llmops.api.workspace.controller",
-
-})
+@RestControllerAdvice(basePackages = "kr.co.proten.llmops.api")
 public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandler {
 
     private static final String FAIL = "fail";
+
+    @ExceptionHandler(ChatProcessingException.class)
+    public ResponseEntity<Object> handleChatProcessingException(ChatProcessingException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
 
     @ExceptionHandler(UnsupportedFileExtensionException.class)
     public ResponseEntity<Object> handleUnsupportedFileExtensionException(UnsupportedFileExtensionException ex) {

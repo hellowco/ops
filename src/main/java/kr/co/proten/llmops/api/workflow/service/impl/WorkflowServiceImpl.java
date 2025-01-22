@@ -103,10 +103,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     @Override
     public void executeWorkflow(String workflowId) {
-//        List<FlowNode> nodeList = getNodes(workflowId);
-//        List<FlowEdge> edgeList = getEdges(workflowId);
         log.info("nodeList = {}", findNodesById(workflowId));
         log.info("edgeList = {}", findEdgesById(workflowId));
+        List<FlowNode> nodeList = findNodesById(workflowId);
+        List<FlowEdge> edgeList = findEdgesById(workflowId);
+
+        //create DAG
+        //validate DAG
+        //executeNode
+
+
     }
 
     /**
