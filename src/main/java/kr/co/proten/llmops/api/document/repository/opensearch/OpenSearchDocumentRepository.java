@@ -28,45 +28,47 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final String FIELD_INDEX = "index";
-    private final String FIELD_DOC_ID = "docId";
+    private static final String FIELD_INDEX = "index";
+    private static final String FIELD_DOC_ID = "docId";
+    private static final String METADATA = "_metadata";
 
     @Override
     public List<Metadata> getDocumentList(String indexName, String knowledgeName, int pageNo, int pageSize) {
-        final String metaIndexName = indexName + "_metadata";
+        final String metaIndexName = indexName + METADATA;
+
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+
+        // SearchRequest 생성
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(metaIndexName)
+                .query(q -> q
+                        .bool(b -> b
+                                .filter(f -> f
+                                        .term(t -> t
+                                                .field(FIELD_INDEX)
+                                                .value(FieldValue.of(knowledgeName))
+                                        )
+                                )
+                        )
+                )
+                .source(s -> s
+                        .filter(f -> f
+                                .includes("*")
+                        )
+                )
+                .sort(s -> s
+                        .field(sf -> sf
+                                .field("index.keyword")
+                                .order(SortOrder.Asc) // 오름차순 정렬
+                        )
+                )
+                .from(pageNo * pageSize) // 페이지
+                .size(pageSize) // 한 번에 가져올 문서 수
+                .build();
 
         try {
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-
-            // SearchRequest 생성
-            SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(metaIndexName)
-                    .query(q -> q
-                            .bool(b -> b
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field(FIELD_INDEX)
-                                                    .value(FieldValue.of(knowledgeName))
-                                            )
-                                    )
-                            )
-                    )
-                    .source(s -> s
-                            .filter(f -> f
-                                    .includes("*")
-                            )
-                    )
-                    .sort(s -> s
-                            .field(sf -> sf
-                                    .field("index.keyword")
-                                    .order(SortOrder.Asc) // 오름차순 정렬
-                            )
-                    )
-                    .from(pageNo * pageSize) // 페이지
-                    .size(pageSize) // 한 번에 가져올 문서 수
-                    .build();
-
             // 요청 실행
             SearchResponse<Metadata> response = client.search(searchRequest, Metadata.class);
 
@@ -96,44 +98,45 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
      */
     @Override
     public List<Document> getDocByDocId(String indexName, String knowledgeName, String docId, int pageNo, int pageSize) {
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        // SearchRequest 생성
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(indexName)
+                .query(q -> q
+                        .bool(b -> b
+                                .filter(f -> f
+                                        .term(t -> t
+                                                .field(FIELD_INDEX)
+                                                .value(FieldValue.of(knowledgeName))
+                                        )
+                                )
+                                .must(m -> m
+                                        .term(t -> t
+                                                .field(FIELD_DOC_ID)
+                                                .value(FieldValue.of(docId))
+                                        )
+                                )
+                        )
+                )
+                .source(s -> s
+                        .filter(f -> f
+                                .includes("*")
+                                .excludes("content_vec")
+                        )
+                )
+                .sort(s -> s
+                        .field(sf -> sf
+                                .field("chunkId")
+                                .order(SortOrder.Asc) // 오름차순 정렬
+                        )
+                )
+                .from(pageNo * pageSize) // 페이지
+                .size(pageSize) // 한 번에 가져올 문서 수
+                .build();
+
         try {
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-            // SearchRequest 생성
-            SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(indexName)
-                    .query(q -> q
-                            .bool(b -> b
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field(FIELD_INDEX)
-                                                    .value(FieldValue.of(knowledgeName))
-                                            )
-                                    )
-                                    .must(m -> m
-                                            .term(t -> t
-                                                    .field(FIELD_DOC_ID)
-                                                    .value(FieldValue.of(docId))
-                                            )
-                                    )
-                            )
-                    )
-                    .source(s -> s
-                            .filter(f -> f
-                                    .includes("*")
-                                    .excludes("content_vec")
-                            )
-                    )
-                    .sort(s -> s
-                            .field(sf -> sf
-                                    .field("chunkId")
-                                    .order(SortOrder.Asc) // 오름차순 정렬
-                            )
-                    )
-                    .from(pageNo * pageSize) // 페이지
-                    .size(pageSize) // 한 번에 가져올 문서 수
-                    .build();
-
             // 요청 실행
             SearchResponse<Document> response = client.search(searchRequest, Document.class);
 
@@ -159,38 +162,39 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
      */
     @Override
     public Metadata getDocMetadataByDocId(String indexName, String knowledgeName, String docId) {
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        final String metaIndexName = indexName + METADATA;
+
+        // SearchRequest 생성
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(metaIndexName)
+                .query(q -> q
+                        .bool(b -> b
+                                .filter(f -> f
+                                        .term(t -> t
+                                                .field(FIELD_INDEX)
+                                                .value(FieldValue.of(knowledgeName))
+                                        )
+                                )
+                                .must(m -> m
+                                        .term(t -> t
+                                                .field(FIELD_DOC_ID)
+                                                .value(FieldValue.of(docId))
+                                        )
+                                )
+                        )
+                )
+                .source(s -> s
+                        .filter(f -> f
+                                .includes("*")
+                        )
+                )
+                .size(1)
+                .build();
+
         try {
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-            final String metaIndexName = indexName + "_metadata";
-
-            // SearchRequest 생성
-            SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(metaIndexName)
-                    .query(q -> q
-                            .bool(b -> b
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field(FIELD_INDEX)
-                                                    .value(FieldValue.of(knowledgeName))
-                                            )
-                                    )
-                                    .must(m -> m
-                                            .term(t -> t
-                                                    .field(FIELD_DOC_ID)
-                                                    .value(FieldValue.of(docId))
-                                            )
-                                    )
-                            )
-                    )
-                    .source(s -> s
-                            .filter(f -> f
-                                    .includes("*")
-                            )
-                    )
-                    .size(1)
-                    .build();
-
             // 요청 실행
             SearchResponse<Metadata> response = client.search(searchRequest, Metadata.class);
 
@@ -217,33 +221,33 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
      */
     @SuppressWarnings("rawtypes")
     public String updateDocMetadataByDocId(String indexName, String docId, Map<String, Object> updatedFields) {
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        final String metaIndexName = indexName + METADATA;
+
+        // SearchRequest로 docId에 해당하는 메타데이터 찾기
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(metaIndexName)
+                .query(q -> q
+                        .bool(b -> b
+                                .filter(f -> f
+                                        .term(t -> t
+                                                .field(FIELD_INDEX)
+                                                .value(FieldValue.of(updatedFields.get(FIELD_INDEX).toString()))
+                                        )
+                                )
+                                .must(m -> m
+                                        .term(t -> t
+                                                .field(FIELD_DOC_ID)
+                                                .value(FieldValue.of(docId))
+                                        )
+                                )
+                        )
+                )
+                .size(1) // 메타데이터는 첫 번째 문서만 처리
+                .build();
         try {
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-            final String metaIndexName = indexName + "_metadata";
-
-            // SearchRequest로 docId에 해당하는 메타데이터 찾기
-            SearchRequest searchRequest = new SearchRequest.Builder()
-                    .index(metaIndexName)
-                    .query(q -> q
-                            .bool(b -> b
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field(FIELD_INDEX)
-                                                    .value(FieldValue.of(updatedFields.get("index").toString()))
-                                            )
-                                    )
-                                    .must(m -> m
-                                            .term(t -> t
-                                                    .field(FIELD_DOC_ID)
-                                                    .value(FieldValue.of(docId))
-                                            )
-                                    )
-                            )
-                    )
-                    .size(1) // 메타데이터는 첫 번째 문서만 처리
-                    .build();
-
             SearchResponse<Map> response = client.search(searchRequest, Map.class);
 
             if (!response.hits().hits().isEmpty()) {
@@ -251,7 +255,7 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
                 String documentId = response.hits().hits().get(0).id();
 
                 // 마지막 업데이트 시간 반영
-                updatedFields.put("lastUpdatedDate", DateUtil.generateCurrentTimestamp());
+                updatedFields.put("lastUpdatedDate", DateUtil.generateCurrentTimestamp4OpenSearch());
 
                 // UpdateRequest 생성
                 UpdateRequest updateRequest = new UpdateRequest.Builder()
@@ -283,60 +287,61 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
      * @param docId     the doc id
      */
     public void deleteDocByDocId(String indexName, String knowledgeName, String docId) {
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        final String metaIndexName = indexName + METADATA;
+
+        // 인덱스 content 에서 문서 삭제
+        DeleteByQueryRequest deleteByQueryRequest1 = new DeleteByQueryRequest.Builder()
+                .index(indexName)
+                .query(q -> q
+                        .bool(b -> b
+                                .filter(f -> f
+                                        .term(t -> t
+                                                .field(FIELD_INDEX)
+                                                .value(FieldValue.of(knowledgeName))
+                                        )
+                                )
+                                .must(m -> m
+                                        .term(t -> t
+                                                .field(FIELD_DOC_ID)
+                                                .value(FieldValue.of(docId))
+                                        )
+                                )
+                        )
+                )
+                .build();
+
+        // 인덱스 metadata 에서 문서 삭제
+        DeleteByQueryRequest deleteByQueryRequest2 = new DeleteByQueryRequest.Builder()
+                .index(metaIndexName)
+                .query(q -> q
+                        .bool(b -> b
+                                .filter(f -> f
+                                        .term(t -> t
+                                                .field(FIELD_INDEX)
+                                                .value(FieldValue.of(knowledgeName))
+                                        )
+                                )
+                                .must(m -> m
+                                        .term(t -> t
+                                                .field(FIELD_DOC_ID)
+                                                .value(FieldValue.of(docId))
+                                        )
+                                )
+                        )
+                )
+                .build();
+
         try {
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-            final String metaIndexName = indexName + "_metadata";
-
-            // 인덱스 content 에서 문서 삭제
-            DeleteByQueryRequest deleteByQueryRequest1 = new DeleteByQueryRequest.Builder()
-                    .index(indexName)
-                    .query(q -> q
-                            .bool(b -> b
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field(FIELD_INDEX)
-                                                    .value(FieldValue.of(knowledgeName))
-                                            )
-                                    )
-                                    .must(m -> m
-                                            .term(t -> t
-                                                    .field(FIELD_DOC_ID)
-                                                    .value(FieldValue.of(docId))
-                                            )
-                                    )
-                            )
-                    )
-                    .build();
-
-            // 인덱스 metadata 에서 문서 삭제
-            DeleteByQueryRequest deleteByQueryRequest2 = new DeleteByQueryRequest.Builder()
-                    .index(metaIndexName)
-                    .query(q -> q
-                            .bool(b -> b
-                                    .filter(f -> f
-                                            .term(t -> t
-                                                    .field(FIELD_INDEX)
-                                                    .value(FieldValue.of(knowledgeName))
-                                            )
-                                    )
-                                    .must(m -> m
-                                            .term(t -> t
-                                                    .field(FIELD_DOC_ID)
-                                                    .value(FieldValue.of(docId))
-                                            )
-                                    )
-                            )
-                    )
-                    .build();
-
             // 요청 실행
             DeleteByQueryResponse response1 = client.deleteByQuery(deleteByQueryRequest1);
             DeleteByQueryResponse response2 = client.deleteByQuery(deleteByQueryRequest2);
 
             // 삭제된 문서 수 출력
             log.info("Deleted {} documents from {}", response1.deleted(), indexName);
-            log.info("Deleted {} documents from {}", response2.deleted(), indexName+"_metadata");
+            log.info("Deleted {} documents from {}", response2.deleted(), indexName + METADATA);
         } catch (Exception e) {
             throw new RuntimeException("Error deleting documents by query for docId: " + docId, e);
         }
@@ -344,32 +349,37 @@ public class OpenSearchDocumentRepository implements DocumentRepository {
 
     public boolean saveDocument(String indexName, List<Document> documents, Metadata metadata) {
         boolean isSuccess = false;
-        try {
-            // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
-            OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
-            // 메타데이터 인덱스 이름 생성
-            final String metaIndexName = indexName + "_metadata";
+        // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
-            // Bulk 요청 생성
-            BulkRequest.Builder bulkRequestBuilder = new BulkRequest.Builder();
+        // 메타데이터 인덱스 이름 생성
+        final String metaIndexName = indexName + METADATA;
 
-            // 문서들을 Bulk 요청에 추가
-            documents.forEach(document -> {
-                bulkRequestBuilder.operations(op -> op
-                        .index(idx -> idx
-                                .index(indexName)
-                                .id(document.getId())
-                                .document(document)));
-            });
+        // Bulk 요청 생성
+        BulkRequest.Builder bulkRequestBuilder = new BulkRequest.Builder();
 
-            // 메타데이터를 Bulk 요청에 추가
+        // 문서들을 Bulk 요청에 추가
+        documents.forEach(document ->
             bulkRequestBuilder.operations(op -> op
                     .index(idx -> idx
-                            .index(metaIndexName)
-                            .id(metadata.getId())
-                            .document(metadata)));
+                            .index(indexName)
+                            .id(document.getId())
+                            .document(document)
+                    )
+            )
+        );
 
+        // 메타데이터를 Bulk 요청에 추가
+        bulkRequestBuilder.operations(op -> op
+                .index(idx -> idx
+                        .index(metaIndexName)
+                        .id(metadata.getId())
+                        .document(metadata)
+                )
+        );
+
+        try {
             // Bulk 요청 실행
             isSuccess = executeBulkRequest(client, bulkRequestBuilder.build());
 

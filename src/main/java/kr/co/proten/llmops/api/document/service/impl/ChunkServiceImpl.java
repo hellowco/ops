@@ -60,6 +60,7 @@ public class ChunkServiceImpl implements ChunkService {
     public Map<String, Object> readChunk(String indexName, String knowledgeName, String docId, long chunkId) {
         return executeWithResult(() -> {
             Document document = openSearchChunkRepository.getChunkByChunkId(indexName, knowledgeName, docId, chunkId);
+
             return createSuccessResult("문서 청크 가져오기 성공", DocumentDTO.fromEntity(document));
         });
     }
@@ -84,6 +85,7 @@ public class ChunkServiceImpl implements ChunkService {
     public Map<String, Object> deleteChunk(String indexName, String knowledgeName, String docId, long chunkId) {
         return executeWithResult(() -> {
             openSearchChunkRepository.deleteChunkByChunkId(indexName, knowledgeName, docId, chunkId);
+
             return createSuccessResult("문서 청크 삭제 성공", "");
         });
     }
@@ -103,11 +105,13 @@ public class ChunkServiceImpl implements ChunkService {
         Metadata metadata = openSearchDocumentRepository.getDocMetadataByDocId(indexName, knowledgeName, docId);
         metadata.setChunkNum(metadata.getChunkNum() + 1);
         openSearchDocumentRepository.updateDocMetadataByDocId(indexName, docId, convertToMap(metadata));
+
         return metadata;
     }
 
     private Map<String, Object> executeWithResult(ServiceExecutor executor) {
         Map<String, Object> result = new HashMap<>();
+
         try {
             result.putAll(executor.execute());
         } catch (UnsupportedOperationException e) {
@@ -118,14 +122,17 @@ public class ChunkServiceImpl implements ChunkService {
             result.put("status", "error");
             result.put("message", "오류 발생: " + e.getMessage());
         }
+
         return result;
     }
 
     private Map<String, Object> createSuccessResult(String message, Object response) {
         Map<String, Object> result = new HashMap<>();
+
         result.put("status", "success");
         result.put("message", message);
         result.put("response", response);
+
         return result;
     }
 

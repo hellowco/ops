@@ -17,6 +17,8 @@ import java.util.List;
 
 public class OpenSearchConfig {
 
+    private OpenSearchConfig() {}
+
     public static OpenSearchClient createConnection(String[] searchServers, String userName, String password) {
         try {
             // 사용자 인증 정보 설정

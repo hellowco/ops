@@ -10,7 +10,6 @@ import kr.co.proten.llmops.api.search.service.strategy.SearchProcessor;
 import kr.co.proten.llmops.api.search.service.strategy.VectorSearchProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -27,37 +26,39 @@ public class SearchServiceImpl implements SearchService {
         this.searchFactory = searchFactory;
     }
 
-    @Value("${search.keyword.weight}")
-    private float DefaultKeywordWeight;
-
-    @Value("${search.vector.weight}")
-    private float DefaultVectorWeight;
-
-    @Value("${search.knn.k}")
-    private int DefaultKnnK;
-
     @Override
     public Map<String, Object> search(SearchRequestDTO searchRequestDTO) {
         Map<String, Object> result = new HashMap<>();
+
+        float keywordWeight = searchRequestDTO.getKeywordWeightAsFloat();
+        float vectorWeight = searchRequestDTO.getVectorWeightAsFloat();
+        int k = searchRequestDTO.getKAsInt();
+        int page = searchRequestDTO.getPageAsInt();
+        int pageSize = searchRequestDTO.getPageSizeAsInt();
 
         // 1. 검색 서비스 선택
         SearchProcessor searchProcessor = searchFactory.getSearchService(searchRequestDTO.searchType())
                 .orElseThrow(() -> new UnsupportedOperationException("지원하지 않는 검색 타입: " + searchRequestDTO.searchType()));
 
         List<DocumentDTO> documentList;
-        if (searchProcessor instanceof HybridSearchProcessor) {
-            printLog(searchRequestDTO, searchProcessor);
-            float keywordWeight = searchRequestDTO.keywordWeight().orElse(DefaultKeywordWeight);
-            float vectorWeight = searchRequestDTO.vectorWeight().orElse(DefaultVectorWeight);
-            int k = searchRequestDTO.k().orElse(DefaultKnnK);
-            documentList = ((HybridSearchProcessor) searchProcessor).search(searchRequestDTO.indexName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), keywordWeight, vectorWeight, k);
-        } else if (searchProcessor instanceof KeywordSearchProcessor) {
-            printLog(searchRequestDTO, searchProcessor);
-            documentList = ((KeywordSearchProcessor) searchProcessor).search(searchRequestDTO.indexName(), searchRequestDTO.knowledgeName(), searchRequestDTO.query());
-        } else if (searchProcessor instanceof VectorSearchProcessor) {
-            printLog(searchRequestDTO, searchProcessor);
-            int k = searchRequestDTO.k().orElse(DefaultKnnK);
-            documentList = ((VectorSearchProcessor) searchProcessor).search(searchRequestDTO.indexName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query(), k);
+        if (searchProcessor instanceof HybridSearchProcessor hybridSearchProcessor) {
+            printLog(searchRequestDTO, hybridSearchProcessor);
+
+            documentList = hybridSearchProcessor.search(
+                    searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query()
+                    , keywordWeight, vectorWeight, k, page, pageSize);
+        } else if (searchProcessor instanceof KeywordSearchProcessor keywordSearchProcessor) {
+            printLog(searchRequestDTO, keywordSearchProcessor);
+
+            documentList = keywordSearchProcessor.search(
+                    searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.query()
+                    , page, pageSize);
+        } else if (searchProcessor instanceof VectorSearchProcessor vectorSearchProcessor) {
+            printLog(searchRequestDTO, vectorSearchProcessor);
+
+            documentList = vectorSearchProcessor.search(
+                    searchRequestDTO.modelName(), searchRequestDTO.knowledgeName(), searchRequestDTO.modelType(), searchRequestDTO.query()
+                    , k, page, pageSize);
         } else {
             throw new UnsupportedOperationException("지원하지 않는 검색 프로세서 타입: " + searchProcessor.getServiceType());
         }

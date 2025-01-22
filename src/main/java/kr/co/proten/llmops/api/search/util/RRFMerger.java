@@ -4,6 +4,7 @@ import kr.co.proten.llmops.api.document.dto.DocumentDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,8 @@ public class RRFMerger {
             List<DocumentDTO> keywordResults,
             List<DocumentDTO> vectorResults,
             double keywordWeight,
-            double vectorWeight
+            double vectorWeight,
+            int pageSize
     ) {
         // 최종 점수 맵 (문서 ID -> 점수)
         Map<String, Double> scoreMap = new HashMap<>();
@@ -42,18 +44,17 @@ public class RRFMerger {
             );
         }
 
-
-        // 문서 정렬 및 새 DocumentDTO 생성
+        // 상위 pageSize개의 문서를 선택
         return scoreMap.entrySet().stream()
-                .sorted(Map.Entry.<String, Double>comparingByValue().reversed()) // 점수 내림차순 정렬
+                .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                .limit(pageSize) // pageSize 제한
                 .map(entry -> {
                     String id = entry.getKey();
-                    double finalScore = entry.getValue();
-                    log.debug("finalScore: {}", finalScore);
+                    double finalScore = entry.getValue() * 100;
+                    log.info(id + " : " + finalScore);
                     DocumentDTO originalDoc = findDocument(id, keywordResults, vectorResults);
 
                     if (originalDoc != null) {
-                        // 새로운 DocumentDTO 생성 (Builder 사용)
                         return DocumentDTO.builder()
                                 .id(originalDoc.id())
                                 .docId(originalDoc.docId())
@@ -62,12 +63,12 @@ public class RRFMerger {
                                 .isActive(originalDoc.isActive())
                                 .content(originalDoc.content())
                                 .page(originalDoc.page())
-                                .score(finalScore) // 최종 점수 설정
+                                .score(finalScore)
                                 .build();
                     }
                     return null;
                 })
-                .filter(Objects::nonNull) // Null 문서 제거
+                .filter(Objects::nonNull)
                 .toList();
     }
 

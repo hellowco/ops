@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Component
 public class ChunkProcessorFactory {
-    private final Map<String, ChunkProcessor> chunkServiceMap = new HashMap<String, ChunkProcessor>();
+    private final Map<String, ChunkProcessor> chunkServiceMap = new HashMap<>();
 
     public ChunkProcessorFactory(List<ChunkProcessor> chunkProcessors) {
         chunkProcessors.forEach(s -> chunkServiceMap.put(s.getServiceType(), s));

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 public class ChunkProcessorRegistry {
@@ -21,6 +20,6 @@ public class ChunkProcessorRegistry {
         return plugins.stream()
                 .filter(plugin -> requestedKeys.stream().anyMatch(plugin::supports)) // 요청 키 중 하나라도 지원하는 플러그인 필터링
                 .map(ChunkProcessorPlugin::getProcessor)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

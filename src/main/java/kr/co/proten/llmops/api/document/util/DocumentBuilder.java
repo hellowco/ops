@@ -5,10 +5,10 @@ import kr.co.proten.llmops.api.document.entity.Metadata;
 import kr.co.proten.llmops.core.helpers.DateUtil;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
+import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID4Doc;
 
 public class DocumentBuilder {
     public Document createDocument(
@@ -39,11 +39,10 @@ public class DocumentBuilder {
             .mapToObj(i -> buildDocument(
                 knowledgeName,
                 docId,
-                i + 1, // chunkId는 문서에서 청크된 순서
+                i + 1L, // chunkId는 문서에서 청크된 순서
                 chunks.get(i), 
-                embeddings != null ? embeddings.get(i) : null
-            ))
-            .collect(Collectors.toList());
+                embeddings != null ? embeddings.get(i) : null)
+            ).toList();
     }
     
     private void validateInput(List<String> chunks, List<List<Double>> embeddings) {
@@ -66,7 +65,7 @@ public class DocumentBuilder {
     ) {
         return Document.builder()
             .index(knowledgeName)
-            .id(generateUUID())
+            .id(generateUUID4Doc())
             .docId(docId)
             .chunkId(chunkId)
             .content(content)
@@ -89,8 +88,8 @@ public class DocumentBuilder {
                 .docId(docId)
                 .index(knowledgeName)
                 .isActive(true)
-                .lastUpdatedDate(DateUtil.generateCurrentTimestamp())
-                .convertDate(DateUtil.generateCurrentTimestamp())
+                .lastUpdatedDate(DateUtil.generateCurrentTimestamp4OpenSearch())
+                .convertDate(DateUtil.generateCurrentTimestamp4OpenSearch())
                 .orgFileName(filename)
                 .orgFilePath(filepath)
                 .totalPage(0)

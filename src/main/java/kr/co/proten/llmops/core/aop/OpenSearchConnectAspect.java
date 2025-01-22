@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.opensearch.client.opensearch.OpenSearchClient;
 
+import java.util.List;
+
 @Aspect
 @Component
 public class OpenSearchConnectAspect {
@@ -25,33 +27,51 @@ public class OpenSearchConnectAspect {
     @Value("${search.password}")
     private String password;
 
+    private static final String BASE_PACKAGE = "kr.co.proten.llmops.api.";
+
+    private final List<String> opensearchDomains;
+
     private static final ThreadLocal<OpenSearchClient> threadLocalClient = new ThreadLocal<>();
 
-    @Around("execution(* kr.co.proten.llmops.api..repository..*Repository.*(..))") // 각 도메인의 repo 디렉토리 및 하위 디렉토리
+    public OpenSearchConnectAspect(@Value("${opensearch-domains}") List<String> opensearchDomains) {
+        this.opensearchDomains = opensearchDomains;
+    }
+
+    @Around("execution(* kr.co.proten.llmops.api..repository..*Repository.*(..))")
     public Object manageConnection(ProceedingJoinPoint joinPoint) throws Throwable {
-        OpenSearchClient client = null;
+        // 호출된 클래스의 패키지명
+        String targetPackage = joinPoint.getTarget().getClass().getPackage().getName();
 
-        try {
-            // OpenSearch 연결 생성
-            client = OpenSearchConfig.createConnection(searchServers, userName, password);
-            threadLocalClient.set(client);
-            log.info("OpenSearch connection established for {}", joinPoint.getSignature().getName());
+        if(isAllowedDomain(targetPackage)){
+            log.info("OpenSearch domain found for target package: {}", targetPackage);
+            OpenSearchClient client = null;
 
-            // 대상 메서드 실행
-            return joinPoint.proceed();
-        } catch (Exception e) {
-            log.error("Error occurred during OpenSearch operation in {}: {}",
-                    joinPoint.getSignature(), e.getMessage(), e);
-            throw e; // 예외를 다시 던져 상위 호출자에게 알림
-        } finally {
-            // OpenSearch 연결 해제
-            OpenSearchConfig.closeConnection(client);
-            threadLocalClient.remove();
-            log.info("OpenSearch connection closed for {}", joinPoint.getSignature().getName());
+            try {
+                client = OpenSearchConfig.createConnection(searchServers, userName, password);
+                threadLocalClient.set(client);
+                log.info("OpenSearch connection established for {}", joinPoint.getSignature().getName());
+
+                return joinPoint.proceed(); // 실제 메서드 실행
+            } catch (Exception e) {
+                log.error("Error during OpenSearch operation in {}", joinPoint.getSignature(), e);
+                throw e;
+            } finally {
+                OpenSearchConfig.closeConnection(client);
+                threadLocalClient.remove();
+                log.info("OpenSearch connection closed for {}", joinPoint.getSignature().getName());
+            }
         }
+        return joinPoint.proceed();
     }
 
     public static OpenSearchClient getClient() {
         return threadLocalClient.get();
+    }
+
+    private boolean isAllowedDomain(String packageName) {
+        // 공통 패키지 + 허용된 도메인으로 전체 경로 생성 및 비교
+        return opensearchDomains.stream()
+                .map(domain -> BASE_PACKAGE + domain)
+                .anyMatch(packageName::startsWith);
     }
 }
