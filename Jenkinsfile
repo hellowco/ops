@@ -1,7 +1,7 @@
 pipeline{
     agent any
     environment {
-        SCRIPT_PATH = '/home/proten/docker/jenkins/custom/llmops-api'
+        SCRIPT_PATH = '/var/jenkins_home/custom/llmops-api'
     }
     tools {
         gradle 'gradle 8.11.1'
@@ -25,7 +25,7 @@ pipeline{
         stage('Deploy') {
             steps {
                 sh '''
-                	mkdir -p /home/proten/docker/jenkins/custom/llmops-api
+                	mkdir -p ${SCRIPT_PATH}
                     cp ./docker/Dockerfile ${SCRIPT_PATH}
                     cp ./deploy/rebuild_and_run.sh ${SCRIPT_PATH}
                     cp ./deploy/root-ca.der ${SCRIPT_PATH}
