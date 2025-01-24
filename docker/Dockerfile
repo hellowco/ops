@@ -2,12 +2,11 @@
 FROM openjdk:17-jdk-alpine
 
 # root-ca 복사
-#WORKDIR /var/jenkins_home/custom/llmops-api
-COPY root-ca.der /root-ca.der
+COPY root-ca.der /tmp/root-ca.der
 
 # 키 생성
 RUN keytool -import -trustcacerts -alias opensearch \
-    -file /root-ca.der \
+    -file /tmp/root-ca.der \
     -keystore $JAVA_HOME/lib/security/cacerts \
     -storepass changeit -noprompt
 
