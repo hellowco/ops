@@ -1,18 +1,18 @@
-# Base image ¼³Á¤
+# Base image ë³µì‚¬
 FROM openjdk:17-jdk-alpine
 
-# ÀÎÁõ¼­ ÆÄÀÏ º¹»ç
-COPY root-ca.der /tmp/root-ca.der
+# root-ca ë³µì‚¬
+COPY /var/jenkins_home/custom/llmops-api/root-ca.der /tmp/root-ca.der
 
-# ÀÎÁõ¼­ Ãß°¡
+# í‚¤ ìƒì„±
 RUN keytool -import -trustcacerts -alias opensearch \
     -file /tmp/root-ca.der \
     -keystore $JAVA_HOME/lib/security/cacerts \
     -storepass changeit -noprompt
 
-# JAR ÆÄÀÏÀ» ÄÁÅ×ÀÌ³Ê¿¡ º¹»ç
+# JAR ë³µì‚¬
 ARG JAR_FILE=*.jar
 COPY ${JAR_FILE} app.jar
 
-# ¾ÖÇÃ¸®ÄÉÀÌ¼Ç ½ÇÇà ¸í·É
+# ì‹¤í–‰
 ENTRYPOINT ["java", "-jar", "app.jar"]
