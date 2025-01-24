@@ -2,7 +2,7 @@
 FROM openjdk:17-jdk-alpine
 
 # root-ca 복사
-COPY /home/proten/docker/jenkins/custom/llmops-api/root-ca.der /tmp/root-ca.der
+COPY /var/jenkins_home/custom/llmops-api/root-ca.der /tmp/root-ca.der
 
 # 키 생성
 RUN keytool -import -trustcacerts -alias opensearch \
