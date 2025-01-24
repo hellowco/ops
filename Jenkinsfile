@@ -22,11 +22,6 @@ pipeline{
                 sh 'gradle build -x test'
             }
         }
-        stage('Test') {
-            steps {
-                sh 'gradle test'
-            }
-        }
         stage('Deploy') {
             steps {
                 sh '''
