@@ -7,7 +7,7 @@ COPY root-ca.der /root-ca.der
 
 # 키 생성
 RUN keytool -import -trustcacerts -alias opensearch \
-    -file /tmp/root-ca.der \
+    -file /root-ca.der \
     -keystore $JAVA_HOME/lib/security/cacerts \
     -storepass changeit -noprompt
 
