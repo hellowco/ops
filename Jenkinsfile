@@ -25,6 +25,7 @@ pipeline{
         stage('Deploy') {
             steps {
                 sh '''
+                	mkdir -p /home/proten/docker/jenkins/custom/llmops-api
                     cp ./docker/Dockerfile ${SCRIPT_PATH}
                     cp ./deploy/rebuild_and_run.sh ${SCRIPT_PATH}
                     cp ./deploy/root-ca.der ${SCRIPT_PATH}
