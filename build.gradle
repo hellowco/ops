@@ -84,6 +84,10 @@ tasks.bootJar {
     archiveVersion.set("")
 }
 
+tasks.named('jar') {
+	enabled = false
+}
+
 jar {
     enabled = false
 }
