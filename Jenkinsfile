@@ -36,4 +36,17 @@ pipeline{
             }
         }
     }
+    
+    post {
+        success {
+            slackSend (
+                message: "성공: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). 최근 커밋: '${env.GIT_COMMIT_MESSAGE}'",
+            )
+        }
+        failure {
+            slackSend (
+                message: "실패: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). 최근 커밋: '${env.GIT_COMMIT_MESSAGE}'",
+            )
+        }
+    }
 }
