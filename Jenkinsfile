@@ -12,6 +12,18 @@ pipeline{
                 checkout scm
             }
         }
+        stage('Get Commit Message') {
+            steps {
+                script {
+                    def gitCommitMessage = sh(
+                        script: "git log -1 --pretty=%B",
+                        returnStdout: true
+                    ).trim()
+                    echo "Commit Message: ${gitCommitMessage}"
+                    env.GIT_COMMIT_MESSAGE = gitCommitMessage
+                }
+            }
+        }
         stage('Prepare'){
             steps {
                 sh 'gradle clean'
@@ -35,8 +47,7 @@ pipeline{
                 '''
             }
         }
-    }
-    
+    }    
     post {
         success {
             slackSend (
