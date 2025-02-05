@@ -51,7 +51,7 @@ public class RRFMerger {
                 .map(entry -> {
                     String id = entry.getKey();
                     double finalScore = entry.getValue() * 100;
-                    log.info(id + " : " + finalScore);
+                    log.debug("{} : {}", id, finalScore);
                     DocumentDTO originalDoc = findDocument(id, keywordResults, vectorResults);
 
                     if (originalDoc != null) {

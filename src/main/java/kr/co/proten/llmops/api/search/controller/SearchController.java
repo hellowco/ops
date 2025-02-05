@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Tag(name = "Search", description = "검색(키워드, 벡터, 하이브리드)하는 API")
@@ -22,15 +23,18 @@ import java.util.Map;
 public class SearchController {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private static final String SUCCESS = "success";
     private final SearchService searchService;
 
     @PostMapping
     public ResponseEntity<Map<String,Object>> search(@Valid @RequestBody SearchRequestDTO searchRequestDTO) {
-        Map<String, Object> resultMap;
+        Map<String, Object> resultMap = new HashMap<>();
 
         log.info("searchrequest: {}", searchRequestDTO);
         searchRequestDTO.validate();
-        resultMap = searchService.search(searchRequestDTO);
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", String.format("%s 검색 성공!", searchRequestDTO.searchType()));
+        resultMap.put("response", searchService.search(searchRequestDTO));
 
         return ResponseEntity.ok().body(resultMap);
     }

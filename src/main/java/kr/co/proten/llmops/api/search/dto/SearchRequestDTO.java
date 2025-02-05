@@ -6,10 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
 import kr.co.proten.llmops.core.validation.ValidNumber;
+import lombok.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 @Slf4j
+@Builder
 public record SearchRequestDTO(
         @NotBlank
         @Schema(description = "색인 모델", example = "llmops")
@@ -69,79 +72,64 @@ public record SearchRequestDTO(
     public void validate() {
         // Validate keywordWeight and vectorWeight
         if (keywordWeight != null && vectorWeight != null) {
-            double keyword = Double.parseDouble(keywordWeight);
-            double vector = Double.parseDouble(vectorWeight);
-            log.info("keyword value = {}", keyword);
-            log.info("vector value = {}", vector);
+            double keyword = parseDoubleOrThrow(keywordWeight, "keywordWeight must be a valid double");
+            double vector = parseDoubleOrThrow(vectorWeight, "vectorWeight must be a valid double");
 
-            if (keyword < 0 || keyword > 1) {
-                throw new InvalidInputException("keywordWeight must be between 0 and 1");
-            }
-            if (vector < 0 || vector > 1) {
-                throw new InvalidInputException("vectorWeight must be between 0 and 1");
-            }
-            if (Math.abs(keyword + vector - 1) > EPSILON) {
-                throw new InvalidInputException("The sum of keywordWeight and vectorWeight must be 1");
-            }
-        } else if (keywordWeight != null || vectorWeight != null) {
-            throw new InvalidInputException("Both keywordWeight and vectorWeight must be provided together, or neither must be provided.");
+            log.debug("keyword value = {}", keyword);
+            log.debug("vector value = {}", vector);
+
+            Assert.isTrue(keyword >= 0 && keyword <= 1, "keywordWeight must be between 0 and 1");
+            Assert.isTrue(vector >= 0 && vector <= 1, "vectorWeight must be between 0 and 1");
+            Assert.isTrue(Math.abs(keyword + vector - 1) <= EPSILON, "The sum of keywordWeight and vectorWeight must be 1");
+        } else {
+            Assert.isTrue(keywordWeight == null && vectorWeight == null, "Both keywordWeight and vectorWeight must be provided together, or neither must be provided.");
         }
 
         // Validate k
         if (k != null) {
-            try {
-                int kValue = Integer.parseInt(k);
-                if (kValue <= 0) {
-                    throw new InvalidInputException("k value must be greater than 0");
-                }
-            } catch (NumberFormatException e) {
-                throw new InvalidInputException("k must be a valid integer");
-            }
+            int kValue = parseIntOrThrow(k, "k must be a valid integer");
+            Assert.isTrue(kValue > 0, "k value must be greater than 0");
         }
     } //end of validate
 
     @Hidden
     public float getKeywordWeightAsFloat() {
-        try {
-            return Float.parseFloat(keywordWeight);
-        } catch (NumberFormatException e) {
-            throw new InvalidInputException("keywordWeight must be a valid double");
-        }
+        return (float) parseDoubleOrThrow(keywordWeight, "keywordWeight must be a valid double");
     }
 
     @Hidden
     public float getVectorWeightAsFloat() {
-        try {
-            return Float.parseFloat(vectorWeight);
-        } catch (NumberFormatException e) {
-            throw new InvalidInputException("vectorWeight must be a valid double");
-        }
+        return (float) parseDoubleOrThrow(vectorWeight, "vectorWeight must be a valid double");
     }
 
     @Hidden
     public int getKAsInt() {
-        try {
-            return Integer.parseInt(k);
-        } catch (NumberFormatException e) {
-            throw new InvalidInputException("k must be a valid integer");
-        }
+        return parseIntOrThrow(k, "k must be a valid integer");
     }
 
     @Hidden
     public int getPageAsInt() {
-        try {
-            return Integer.parseInt(page);
-        } catch (NumberFormatException e) {
-            throw new InvalidInputException("page must be a valid integer");
-        }
+        return parseIntOrThrow(page, "page must be a valid integer");
     }
 
     @Hidden
     public int getPageSizeAsInt() {
+        return parseIntOrThrow(pageSize, "pageSize must be a valid integer");
+    }
+
+    private double parseDoubleOrThrow(String value, String errorMessage) {
         try {
-            return Integer.parseInt(pageSize);
+            return Double.parseDouble(value);
         } catch (NumberFormatException e) {
-            throw new InvalidInputException("pageSize must be a valid integer");
+            throw new InvalidInputException(errorMessage);
+        }
+    }
+
+    private int parseIntOrThrow(String value, String errorMessage) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw new InvalidInputException(errorMessage);
         }
     }
 } // end of record

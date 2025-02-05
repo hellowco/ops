@@ -12,16 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-@RestControllerAdvice(basePackages = {
-        "kr.co.proten.llmops.api.app.controller",
-        "kr.co.proten.llmops.api.document.controller",
-        "kr.co.proten.llmops.api.knowledge.controller",
-        "kr.co.proten.llmops.api.search.controller",
-        "kr.co.proten.llmops.api.user.controller",
-        "kr.co.proten.llmops.api.workflow.controller",
-        "kr.co.proten.llmops.api.workspace.controller",
-
-})
+@RestControllerAdvice(basePackages = "kr.co.proten.llmops.api")
 public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandler {
 
     private static final String FAIL = "fail";
@@ -46,11 +37,6 @@ public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandle
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(FileStorageException.class)
-    public ResponseEntity<Object> handleFileStorageException(FileStorageException ex) {
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
-    }
-
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<Object> handleMaxSizeException(MaxUploadSizeExceededException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
@@ -69,6 +55,31 @@ public class ExceptionRestControllerAdvice extends ResponseEntityExceptionHandle
     @ExceptionHandler(InvalidInputException.class)
     public ResponseEntity<Object> handleInvalidInputException(InvalidInputException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(NodeNotFoundException.class)
+    public ResponseEntity<Object> handleNodeNotFoundException(NodeNotFoundException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkflowExecutionException.class)
+    public ResponseEntity<Object> handleWorkflowExecutionException(WorkflowExecutionException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(NodeExecutionException.class)
+    public ResponseEntity<Object> handleNodeExecutionException(NodeExecutionException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<Object> handleFileStorageException(FileStorageException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(ChatProcessingException.class)
+    public ResponseEntity<Object> handleChatProcessingException(ChatProcessingException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
     // 기타 예외 처리
