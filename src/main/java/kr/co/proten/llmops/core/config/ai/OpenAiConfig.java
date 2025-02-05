@@ -55,6 +55,7 @@ public class OpenAiConfig {
                 .model(model)
                 .temperature(0.2)
                 .maxTokens(4096)
+                .streamUsage(true)
                 .build();
 
         return new OpenAiChatModel(api, defaultOptions);

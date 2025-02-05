@@ -83,7 +83,7 @@ public class SearchRepository {
                 .from(page * pageSize)
         );
 
-        log.info("search request: {}", toJson(searchRequest));
+        log.debug("keyword search request: {}", toJson(searchRequest));
 
         try {
             // 요청 실행
@@ -153,7 +153,7 @@ public class SearchRepository {
                 .from(page * pageSize)
         );
 
-        log.info("search request: {}", toJson(searchRequest));
+        log.debug("vector search request: {}", toJson(searchRequest));
 
         try {
             // 요청 실행

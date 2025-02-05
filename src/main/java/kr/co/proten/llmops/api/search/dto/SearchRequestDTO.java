@@ -6,11 +6,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
 import kr.co.proten.llmops.core.validation.ValidNumber;
+import lombok.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 @Slf4j
+@Builder
 public record SearchRequestDTO(
         @NotBlank
         @Schema(description = "색인 모델", example = "llmops")

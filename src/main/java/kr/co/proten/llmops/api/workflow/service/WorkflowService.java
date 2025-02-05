@@ -17,5 +17,5 @@ public interface WorkflowService {
 
     WorkflowResponseDTO updateWorkflow(WorkflowUpdateDTO workflowDto);
 
-    Flux<NodeResponse> executeWorkflow(String workflowId);
+    Flux<NodeResponse> executeWorkflow(String workflowId, String query);
 }

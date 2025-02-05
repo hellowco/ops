@@ -43,7 +43,7 @@ public class OpenSearchConnectAspect {
         String targetPackage = joinPoint.getTarget().getClass().getPackage().getName();
 
         if(isAllowedDomain(targetPackage)){
-            log.info("OpenSearch domain found for target package: {}", targetPackage);
+            log.debug("OpenSearch domain found for target package: {}", targetPackage);
             OpenSearchClient client = null;
 
             try {
@@ -58,7 +58,7 @@ public class OpenSearchConnectAspect {
             } finally {
                 OpenSearchConfig.closeConnection(client);
                 threadLocalClient.remove();
-                log.info("OpenSearch connection closed for {}", joinPoint.getSignature().getName());
+                log.debug("OpenSearch connection closed for {}", joinPoint.getSignature().getName());
             }
         }
         return joinPoint.proceed();

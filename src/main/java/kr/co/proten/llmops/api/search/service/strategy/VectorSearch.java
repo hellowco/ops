@@ -34,7 +34,7 @@ public class VectorSearch implements VectorSearchProcessor {
                 .orElseThrow(() -> new UnsupportedOperationException("지원하지 않는 임베딩 형식: " + modelType));
 
         List<Double> doubleList = embeddingProcessor.embed(query);
-        log.info("query embedded as {}", doubleList.get(0));
+        log.debug("query embedded as {}", doubleList.get(0));
         AtomicInteger index = new AtomicInteger(0);
 
         float[] vectorQuery = doubleList.stream()

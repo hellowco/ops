@@ -7,8 +7,10 @@ import kr.co.proten.llmops.api.node.dto.NodeResponse;
 import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -16,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Tag(name = "Workflow", description = "워크플로우 조회, 수정하는 API")
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/workflows")
@@ -51,9 +54,27 @@ public class WorkflowController {
 
     @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "워크플로우 실행", description = "워크플로우 ID로 워크플로우(그래프) 실행")
-    public Flux<NodeResponse> executeWorkflow (
-            @RequestParam String workflowId) {
-        return workflowService.executeWorkflow(workflowId);
+    public Flux<ServerSentEvent<NodeResponse>> executeWorkflow (
+            @RequestParam(defaultValue = "658ffad3-59a8-40dd-9623-c7302d4cc044") String workflowId,
+            @RequestParam(defaultValue = "test") String query
+    ) {
+        Flux<NodeResponse> nodeResponseFlux =  workflowService.executeWorkflow(workflowId, query);
+
+        // NodeResponse를 ServerSentEvent로 변환
+        return nodeResponseFlux.map(response ->
+                ServerSentEvent.<NodeResponse>builder()
+                        .data(response)              // 실제 데이터
+                        .build()
+        )
+        .onErrorResume(e -> {
+            log.error("node exception: {}", e.getMessage());
+            return Flux.just(
+                    ServerSentEvent.<NodeResponse>builder()
+                            .event("nodeResponse-error")
+                            .id("error-event")
+                            .build()
+            );
+        });
     }
 
 }

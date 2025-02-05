@@ -3,7 +3,6 @@ package kr.co.proten.llmops.api.workflow.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.proten.llmops.api.model.dto.response.ChatResponse;
 import kr.co.proten.llmops.api.node.dto.NodeResponse;
 import kr.co.proten.llmops.api.workflow.dto.FlowEdge;
 import kr.co.proten.llmops.api.workflow.dto.FlowNode;
@@ -11,7 +10,7 @@ import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
 import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
 import kr.co.proten.llmops.api.workflow.helper.DAG;
-import kr.co.proten.llmops.api.workflow.helper.DAGValidator;
+import kr.co.proten.llmops.api.workflow.helper.DAGManager;
 import kr.co.proten.llmops.api.workflow.mapper.WorkflowMapper;
 import kr.co.proten.llmops.api.workflow.repository.WorkflowRepository;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
@@ -19,15 +18,15 @@ import kr.co.proten.llmops.core.exception.InvalidInputException;
 import kr.co.proten.llmops.core.helpers.MappingLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -38,6 +37,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final WorkflowRepository workflowRepository;
     private final WorkflowMapper workflowMapper;
+    private final WorkflowExecutor workflowExecutor;
+    private final DAGManager dagManager;
 
     @Override
     public WorkflowEntity createWorkflow() {
@@ -52,7 +53,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      * @return Map으로 변환된 초기 워크플로우
      */
     private Map<String, Object> getDefaultWorkflow() {
-        String resourcePath = "mappings/DefaultWorkflow.json";
+        String resourcePath = "workflow/DefaultWorkflow.json";
         Map<String, Object> result;
 
         try (InputStream inputStream = MappingLoader.class.getClassLoader().getResourceAsStream(resourcePath)) {
@@ -106,29 +107,16 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     @Override
-    public Flux<NodeResponse> executeWorkflow(String workflowId) {
+    public Flux<NodeResponse> executeWorkflow(String workflowId, String query) {
         List<FlowNode> nodeList = findNodesById(workflowId);
         List<FlowEdge> edgeList = findEdgesById(workflowId);
 
-        DAG dag = new DAG();
+        // DAG 생성
+        DAG dag = dagManager.createDAG(nodeList, edgeList);
+        log.info("created dag: {}", dag.getGraph());
 
-        // Add nodes and edges to the DAG
-        for (FlowNode node : nodeList) {
-            dag.addNode(node.getData().getType());
-        }
-
-        for (FlowEdge edge : edgeList) {
-            dag.addEdge(edge.getData().getSourceType(), edge.getData().getTargetType());
-        }
-
-        // Validate DAG
-        DAGValidator validator = new DAGValidator();
-        if (validator.hasCycle(dag.getGraph())) {
-            throw new IllegalStateException("Workflow contains a cycle, DAG cannot be created");
-        }
-
-        DAGExecutor executor = new DAGExecutor();
-        return executor.executeDAG(dag);
+        // WorkflowExecutor를 이용해 DAG 실행
+        return workflowExecutor.executeDAG(nodeList, dag.getGraph(), workflowId, query);
     }
 
     /**

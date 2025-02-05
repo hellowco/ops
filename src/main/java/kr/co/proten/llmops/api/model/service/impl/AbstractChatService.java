@@ -8,8 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.metadata.EmptyUsage;
+import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,25 +20,59 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+
 
 public abstract class AbstractChatService implements ChatService {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractChatService.class);
     private static final Duration TIMEOUT_DURATION = Duration.ofSeconds(10);
+    private final AtomicReference<Usage> lastUsage = new AtomicReference<>(new EmptyUsage());
 
     @Override
     public Flux<ChatResponse> processChat(ModelRequest request) {
+
         return Flux.defer(() -> {
             validateRequest(request); // 유효성 검사 로직
             try {
                 ChatModel chatModel = createChatModel(request);
                 Prompt prompt = createPrompt(request);
 
-                log.info("Starting model request: Model={}, Prompt={}", request.model(), request.query());
+                log.info("Starting model request: Model={}, SystemPrompt={}, UserPrompt={}, Documents size={}"
+                        , request.model(), request.instruction(), request.query(), request.documents().size());
 
                 return chatModel.stream(prompt)
                         .timeout(TIMEOUT_DURATION)
-                        .map(response -> new ChatResponse(response.getResult().getOutput().getContent(), "IN_PROGRESS"))
+                        .map(response -> {
+                            if (response == null || response.getMetadata() == null) {
+                                log.warn("⚠️ Received a null response or metadata.");
+                                return ChatResponse.builder()
+                                        .content("")
+                                        .finishReason("IN_PROGRESS")
+                                        .usage(new EmptyUsage())
+                                        .build();
+                            }
+
+                            // Retrieve token
+                            Usage usage = response.getMetadata().getUsage();
+                            if (usage != null && !(usage instanceof EmptyUsage)) {
+                                lastUsage.set(usage); // 🔹 마지막 usage 값 저장
+//                                log.info("✅ Updated lastUsage: {}", usage);
+                            } else {
+                                log.warn("⚠️ Token usage data is missing or EmptyUsage.");
+                            }
+
+                            // Handle potential null output
+                            String outputText = (response.getResult() != null && response.getResult().getOutput() != null)
+                                    ? response.getResult().getOutput().getText()
+                                    : "";
+
+                            return ChatResponse.builder()
+                                    .content(outputText)
+                                    .finishReason("IN_PROGRESS")
+                                    .usage(usage)
+                                    .build();
+                        })
                         .doOnComplete(() -> log.info("Chat processing completed successfully"))
                         .doOnError(this::handleError)
                         .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
@@ -77,15 +113,29 @@ public abstract class AbstractChatService implements ChatService {
         return Mono.fromCallable(() -> {
             boolean isCancelled = Thread.currentThread().isInterrupted();
             String status = isCancelled ? "CANCEL" : "COMPLETE";
-            String message = isCancelled ? "Stream was cancelled." : "Stream completed successfully.";
-            log.info(message);
-            return new ChatResponse(message, status);
+            String message = isCancelled
+                    ? "❌ Stream was cancelled."
+                    : "✅ Stream completed successfully.";
+            log.info("CompletionResponse: {}", message);
+
+            ChatResponse response = ChatResponse.builder()
+                    .content(message)
+                    .finishReason(status)
+                    .usage(lastUsage.get())
+                    .build();
+
+            lastUsage.set(new EmptyUsage());
+            log.info("✅ lastUsage reset to EmptyUsage");
+
+            return response;
         });
     }
 
     private Mono<ChatResponse> handleErrorResponse(Throwable e) {
         log.error("Sending error response to client: {}", e.getMessage());
-        return Mono.just(new ChatResponse(e.getMessage(), "ERROR"));
+        lastUsage.set(new EmptyUsage());
+        log.info("✅ lastUsage reset to EmptyUsage after error");
+        return Mono.just(new ChatResponse(e.getMessage(), "ERROR", new EmptyUsage()));
     }
 
     /**

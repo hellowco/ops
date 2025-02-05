@@ -8,6 +8,8 @@ import lombok.Data;
 public class FlowEdge {
     private String id; // 엣지 ID
     private EdgeData data; // 엣지 데이터
+    private String source;
+    private String target;
 
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
