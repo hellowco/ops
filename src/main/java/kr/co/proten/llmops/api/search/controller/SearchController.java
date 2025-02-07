@@ -1,5 +1,8 @@
 package kr.co.proten.llmops.api.search.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.proten.llmops.api.search.dto.SearchRequestDTO;
@@ -27,6 +30,18 @@ public class SearchController {
     private final SearchService searchService;
 
     @PostMapping
+    @Operation(
+            summary = "검색",
+            description = "지정한 지식명에 검색 실행",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "검색 요청 DTO",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SearchRequestDTO.class)
+                    )
+            )
+    )
     public ResponseEntity<Map<String,Object>> search(@Valid @RequestBody SearchRequestDTO searchRequestDTO) {
         Map<String, Object> resultMap = new HashMap<>();
 

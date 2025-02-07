@@ -1,6 +1,5 @@
 package kr.co.proten.llmops.api.node.service;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.proten.llmops.api.document.dto.DocumentDTO;
@@ -14,20 +13,12 @@ import kr.co.proten.llmops.api.search.service.SearchService;
 import kr.co.proten.llmops.api.workflow.dto.FlowNode;
 import kr.co.proten.llmops.api.workflow.helper.ExecutionContext;
 import kr.co.proten.llmops.core.exception.NodeExecutionException;
-import kr.co.proten.llmops.core.exception.WorkflowExecutionException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,40 +27,38 @@ public class NodeExecutionService {
 
     private final ChatFactory chatFactory;
     private final SearchService searchService;
-    private final Pattern PLACEHOLDER_PATTERN;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public NodeExecutionService(ChatFactory chatFactory, SearchService searchService, @Value("${workflow.placeholder.pattern}") String regexPattern) {
+    public NodeExecutionService(ChatFactory chatFactory, SearchService searchService) {
         this.chatFactory = chatFactory;
         this.searchService = searchService;
-        this.PLACEHOLDER_PATTERN = Pattern.compile(regexPattern);
     }
 
     public Flux<NodeResponse> executeNode(Node node, ExecutionContext context) {
         return Flux.defer(() -> {
-            Map<String, Object> processedInput = mergeInputWithContext(node.getInput(), context);
+//            Map<String, Object> processedInput = mergeInputWithContext(node.getInput(), context);
 
             Flux<NodeResponse> startFlux = Flux.just(
-                    new NodeResponse("NODE_STARTED: " + node.getType(), node.getId(), "")
+                    new NodeResponse("NODE_STARTED", node.getType(), node.getId())
             );
 
             Flux<Map<String, Object>> executionFlux;
             switch (node.getType().toLowerCase()) {
                 case "llm":
-                    Flux<Map<String, Object>> llmChunks = executeLLM(node, processedInput);
+                    Flux<Map<String, Object>> llmChunks = executeLLM(node).cache();
                     Mono<Map<String, Object>> aggregatedResult = llmChunks
                             .collectList()
                             .map(this::aggregateLLMOutput);
                     executionFlux = llmChunks.concatWith(aggregatedResult.flux());
                     break;
                 case "start":
-                    executionFlux = Flux.just(executeStart(node, processedInput));
+                    executionFlux = Flux.just(executeStart(node));
                     break;
                 case "knowledge-retrieval":
-                    executionFlux = Flux.just(executeKnowledgeRetrieval(node, processedInput));
+                    executionFlux = Flux.just(executeKnowledgeRetrieval(node));
                     break;
                 case "end":
-                    executionFlux = Flux.just(executeEnd(node, processedInput));
+                    executionFlux = Flux.just(executeEnd(node));
                     break;
                 default:
                     return Flux.error(new UnsupportedOperationException("Unsupported node type: " + node.getType()));
@@ -80,9 +69,9 @@ public class NodeExecutionService {
                             .map(output -> {
                                 node.setOutput(output);
                                 context.saveOutput(node.getId(), output);
-                                return new NodeResponse("NODE_PROGRESS: " + node.getType(), node.getId(), output);
+                                return new NodeResponse("NODE_PROGRESS", node.getType(), node.getId(), output);
                             })
-                            .concatWithValues(new NodeResponse("NODE_FINISHED: " + node.getType(), node.getId(), node.getOutput()))
+                            .concatWithValues(new NodeResponse("NODE_FINISHED", node.getType(), node.getId(), node.getOutput()))
                             .onErrorMap(e -> {
                                 log.error(e.getMessage());
                                 return new NodeExecutionException("Node execution failed: " + node.getId());
@@ -113,7 +102,7 @@ public class NodeExecutionService {
         return mergedInput;
     }
 
-    private Map<String, Object> executeStart(Node node, Map<String, Object> processedInput) {
+    private Map<String, Object> executeStart(Node node) {
         log.debug("Executing Start Node: {}", node.getId());
 
         Map<String, Object> output = new HashMap<>();
@@ -124,7 +113,7 @@ public class NodeExecutionService {
         return output;
     }
 
-    private Map<String, Object> executeKnowledgeRetrieval(Node node, Map<String, Object> processedInput) {
+    private Map<String, Object> executeKnowledgeRetrieval(Node node) {
         log.debug("Executing Knowledge Retrieval Node: {}", node);
 
         // 데이터셋 설정 파싱
@@ -161,7 +150,7 @@ public class NodeExecutionService {
         return output;
     }
 
-    private Flux<Map<String, Object>> executeLLM(Node node, Map<String, Object> processedInput) {
+    private Flux<Map<String, Object>> executeLLM(Node node) {
         log.debug("Executing LLM Node: {}", node);
 
         Map<String, Object> llm_settings = mapper.convertValue(
@@ -231,25 +220,26 @@ public class NodeExecutionService {
                 });
     }
 
-    private Map<String, Object> executeEnd(Node node, Map<String, Object> processedInput) {
+    private Map<String, Object> executeEnd(Node node) {
 //        log.info("Executing End Node: {}", node);
 
         List<String> variables = (List<String>) node.getInput().get("variables");
-        List<String> result = new ArrayList<>();
+        StringBuilder result = new StringBuilder();
 
         for (String res : variables) {
             res = res.replaceAll("(?s)<think>.*?</think>", ""); // deepseek think 제거
             res = res.replace("✅ Stream completed successfully.", ""); // 정상적으로 끝난 신호 제거
             res = res.trim();
-            result.add(res);
+            result.append(res);
         }
 
         // 최종 결과 포맷팅
         Map<String, Object> output = new HashMap<>();
-        output.put("final_result", result);
+        output.put("final_result", result.toString());
         output.put("status", "COMPLETED");
         output.put("timestamp", System.currentTimeMillis());
 
+//        log.info("Executing End Node: {}", output);
         return output;
     }
 }

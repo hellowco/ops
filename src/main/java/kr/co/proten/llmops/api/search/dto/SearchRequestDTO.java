@@ -15,7 +15,7 @@ import org.springframework.util.Assert;
 @Builder
 public record SearchRequestDTO(
         @NotBlank
-        @Schema(description = "색인 모델", example = "llmops")
+        @Schema(description = "색인 모델(오픈서치의 인덱스명)", example = "llmops")
         String modelName,
 
         @NotBlank
@@ -23,7 +23,7 @@ public record SearchRequestDTO(
         String knowledgeName,
 
         @NotBlank
-        @Schema(description = "임베딩 모델", example = "ProsLLM")
+        @Schema(description = "임베딩 모델(호출할 임베딩 모델 종류)", example = "ProsLLM")
         String modelType,
 
         @NotBlank
