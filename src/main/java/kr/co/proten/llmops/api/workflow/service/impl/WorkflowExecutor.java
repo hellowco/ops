@@ -14,6 +14,9 @@ import org.mapstruct.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.util.*;
 import java.util.function.Function;
@@ -42,11 +45,12 @@ public class WorkflowExecutor {
         Queue<String> executionQueue = new LinkedList<>(sorter.getSortedNodes());
 
         Flux<NodeResponse> workflowStart = Flux.just(
-                new NodeResponse("WORKFLOW_STARTED", workflowId, null)
+                new NodeResponse("WORKFLOW_STARTED", "workflow", workflowId, null)
         );
 
         Flux<NodeResponse> nodeExecutions = Flux.fromIterable(executionQueue)
                 .concatMap(nodeId -> {
+                    log.info("Executing nodeId {}", nodeId);
                     Node node = nodeMap.get(nodeId);
                     if (node == null) {
                         return Flux.error(new NodeNotFoundException("Node not found: " + nodeId));
@@ -60,15 +64,21 @@ public class WorkflowExecutor {
 
                     return nodeExecutionService.executeNode(node, context)
                             .onErrorMap(e -> {
-                                        log.error(e.getMessage());
-                                        return new WorkflowExecutionException("Node execution failed: " + nodeId);
-                                    }
-                            );
-                });
+                                log.error(e.getMessage());
+                                return new WorkflowExecutionException("Node execution failed: " + nodeId);
+                            })
+                            .doOnComplete(() -> log.info("Ending nodeId {}", nodeId));
+                })
+                .doOnComplete(() -> log.info("From nodeExecution Ending workflow {}", workflowId))
+                .cache();
 
-        Flux<NodeResponse> workflowFinish = Flux.just(
-                new NodeResponse("WORKFLOW_FINISHED", workflowId, null)
-        );
+        Mono<NodeResponse> workflowFinish = nodeExecutions
+                .filter(lastResponse -> lastResponse.getMessage() != null)
+                .last()  // Flux의 마지막 요소(NodeResponse)를 추출
+                .map(lastResponse -> {
+                    log.info("lastResponse: {}", lastResponse.toString());
+                    return new NodeResponse("WORKFLOW_FINISHED", "workflow", workflowId, lastResponse.getMessage());
+                });
 
         return workflowStart
                 .concatWith(nodeExecutions)
@@ -78,7 +88,7 @@ public class WorkflowExecutor {
                 })
                 .onErrorResume(ex -> {
                     NodeResponse errorResponse =
-                            new NodeResponse("WORKFLOW_ERROR", workflowId, ex.getMessage());
+                            new NodeResponse("WORKFLOW_ERROR", "workflow", workflowId, Map.of("error", ex.getMessage()));
                     return Flux.just(errorResponse); // or multiple, if you want
                 });
     }
@@ -100,16 +110,6 @@ public class WorkflowExecutor {
         return processed;
     }
 
-    /*private Object processValue(Object value, ExecutionContext context, Map<String, Node> nodeMap) {
-        if (value instanceof String) {
-            return replacePlaceholders((String) value, context, nodeMap);
-        } else if (value instanceof Map) {
-            return processMap((Map<?, ?>) value, context, nodeMap);
-        } else if (value instanceof List) {
-            return processList((List<?>) value, context, nodeMap);
-        }
-        return value;
-    }*/
     private Object processValue(Object value, ExecutionContext context, Map<String, Node> nodeMap) {
         if (value instanceof String strValue) {
             // 문자열 전체가 플레이스홀더인 경우
@@ -223,7 +223,8 @@ public class WorkflowExecutor {
 
     private Map<String, Object> convertNodeDataToMap(FlowNode.NodeData nodeData) {
         // 1) nodeData 전체를 먼저 Map으로 변환합니다.
-        Map<String, Object> resultMap = mapper.convertValue(nodeData, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> resultMap = mapper.convertValue(nodeData, new TypeReference<Map<String, Object>>() {
+        });
 
         // 2) nodeData 안에 datasets 필드가 있고 비어있지 않다면
         if (nodeData.getDatasets() != null && !nodeData.getDatasets().isEmpty()) {

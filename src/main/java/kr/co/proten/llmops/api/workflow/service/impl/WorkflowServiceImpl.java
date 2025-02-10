@@ -87,7 +87,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         ObjectMapper objectMapper = new ObjectMapper();
         // JSON 데이터를 Map으로 변환
         try {
-            mapGraph = objectMapper.readValue(workflowDto.graph(), new TypeReference<>() {});
+            mapGraph = objectMapper.readValue(workflowDto.workflow_data(), new TypeReference<>() {});
         } catch (JsonProcessingException e) {
             throw new InvalidInputException("워크플로우 JSON을 다시 확인해주세요.");
         }

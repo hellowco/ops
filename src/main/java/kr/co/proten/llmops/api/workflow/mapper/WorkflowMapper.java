@@ -14,11 +14,11 @@ import java.util.Map;
 public interface WorkflowMapper {
 
     // DTO -> Entity
-    @Mapping(target = "graph", source = "graph")
+    @Mapping(target = "graph", source = "workflow_data")
     WorkflowEntity toEntity(WorkflowUpdateDTO dto);
 
     // Entity -> DTO
-    @Mapping(target = "graph", source = "graph")
+    @Mapping(target = "workflowData", source = "graph")
     WorkflowResponseDTO toDto(WorkflowEntity entity);
 
     // Custom mapping methods

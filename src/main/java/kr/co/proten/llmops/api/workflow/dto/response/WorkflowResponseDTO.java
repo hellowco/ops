@@ -11,7 +11,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class WorkflowResponseDTO {
         private String workflowId;
-        private String graph;
+        private String workflowData;
         private String createdAt;
         private String updatedAt;
 }
