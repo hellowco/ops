@@ -11,6 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -52,29 +56,38 @@ public class WorkflowController {
         return ResponseEntity.ok(resultMap);
     }
 
-    @PostMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(path = "/execute", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "워크플로우 실행", description = "워크플로우 ID로 워크플로우(그래프) 실행")
     public Flux<ServerSentEvent<NodeResponse>> executeWorkflow (
             @RequestParam(defaultValue = "658ffad3-59a8-40dd-9623-c7302d4cc044") String workflowId,
             @RequestParam(defaultValue = "test") String query
     ) {
+        // 요청 시점에 SecurityContextHolder로부터 인증 정보를 가져와 검증합니다.
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Authentication: {}", authentication);
+        if (authentication == null
+            || !authentication.isAuthenticated()
+            || authentication instanceof AnonymousAuthenticationToken) {
+            return Flux.error(new AccessDeniedException("Require an Authorization"));
+        }
+
         Flux<NodeResponse> nodeResponseFlux =  workflowService.executeWorkflow(workflowId, query);
 
         // NodeResponse를 ServerSentEvent로 변환
         return nodeResponseFlux.map(response ->
-                ServerSentEvent.<NodeResponse>builder()
-                        .data(response)              // 실제 데이터
-                        .build()
-        )
-        .onErrorResume(e -> {
-            log.error("node exception: {}", e.getMessage());
-            return Flux.just(
-                    ServerSentEvent.<NodeResponse>builder()
-                            .event("nodeResponse-error")
-                            .id("error-event")
-                            .build()
-            );
-        });
+                        ServerSentEvent.<NodeResponse>builder()
+                                .data(response)              // 실제 데이터
+                                .build()
+                )
+                .onErrorResume(e -> {
+                    log.error("node exception: {}", e.getMessage());
+                    return Flux.just(
+                            ServerSentEvent.<NodeResponse>builder()
+                                    .event("nodeResponse-error")
+                                    .id("error-event")
+                                    .build()
+                    );
+                });
     }
 
 }

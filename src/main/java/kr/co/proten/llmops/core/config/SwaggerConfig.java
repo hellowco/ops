@@ -25,9 +25,9 @@ public class SwaggerConfig {
         // Build and return the OpenAPI object
         return new OpenAPI()
                 .info(new Info()
-                        .title("Proten LLM Ops! API Documentation")
+                        .title("Proten LLM Ops:: API Documentation")
                         .version("1.0")
-                        .description("프로텐 llm ops (PRIME) API"))
+                        .description("프로텐 LLMOps API"))
                 .components(new Components().addSecuritySchemes("Authorization", securityScheme))
                 .addSecurityItem(securityRequirement);
     }

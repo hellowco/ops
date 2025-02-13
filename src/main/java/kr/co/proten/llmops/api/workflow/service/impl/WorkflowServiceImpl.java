@@ -8,13 +8,14 @@ import kr.co.proten.llmops.api.workflow.dto.FlowEdge;
 import kr.co.proten.llmops.api.workflow.dto.FlowNode;
 import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
-import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
+import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import kr.co.proten.llmops.api.workflow.helper.DAG;
 import kr.co.proten.llmops.api.workflow.helper.DAGManager;
 import kr.co.proten.llmops.api.workflow.mapper.WorkflowMapper;
 import kr.co.proten.llmops.api.workflow.repository.WorkflowRepository;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
+import kr.co.proten.llmops.core.exception.NodeExecutionException;
 import kr.co.proten.llmops.core.helpers.MappingLoader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,16 +35,16 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class WorkflowServiceImpl implements WorkflowService {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final WorkflowRepository workflowRepository;
     private final WorkflowMapper workflowMapper;
     private final WorkflowExecutor workflowExecutor;
     private final DAGManager dagManager;
 
     @Override
-    public WorkflowEntity createWorkflow() {
+    public Workflow createWorkflow() throws IOException {
 
-        return WorkflowEntity.builder()
+        return Workflow.builder()
                 .graph(getDefaultWorkflow())
                 .build();
     }
@@ -52,7 +53,7 @@ public class WorkflowServiceImpl implements WorkflowService {
      * resourcePath에 저장된 json 파일로 초기 워크플로우 만드는 메서드
      * @return Map으로 변환된 초기 워크플로우
      */
-    private Map<String, Object> getDefaultWorkflow() {
+    private Map<String, Object> getDefaultWorkflow() throws IOException {
         String resourcePath = "workflow/DefaultWorkflow.json";
         Map<String, Object> result;
 
@@ -61,11 +62,10 @@ public class WorkflowServiceImpl implements WorkflowService {
                 throw new IOException("Resource not found: " + resourcePath);
             }
 
-            ObjectMapper objectMapper = new ObjectMapper();
             // JSON 데이터를 Map으로 변환
             result = objectMapper.readValue(inputStream, new TypeReference<>() {});
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load resource: " + resourcePath, e);
+            throw new IOException("Failed to load resource: " + resourcePath);
         }
 
         return result;
@@ -73,18 +73,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     @Override
     @Transactional
-    public WorkflowEntity saveWorkflow(WorkflowEntity workflow) {
+    public Workflow saveWorkflow(Workflow workflow) {
         return workflowRepository.save(workflow);
     }
 
     @Override
     public WorkflowResponseDTO updateWorkflow(WorkflowUpdateDTO workflowDto) {
-        WorkflowEntity existingEntity = workflowRepository.findById(workflowDto.workflow_id())
+        Workflow existingEntity = workflowRepository.findById(workflowDto.workflow_id())
                 .orElseThrow(() -> new NoSuchElementException(String.format("워크플로우 ID [%s]에 해당하는 워크플로우를 찾을 수 없습니다.", workflowDto.workflow_id())));
 
         Map<String,Object> mapGraph;
 
-        ObjectMapper objectMapper = new ObjectMapper();
         // JSON 데이터를 Map으로 변환
         try {
             mapGraph = objectMapper.readValue(workflowDto.workflow_data(), new TypeReference<>() {});
@@ -94,16 +93,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
         existingEntity.setGraph(mapGraph); // string -> map 변환
 
-        WorkflowEntity updatedEntity = workflowRepository.save(existingEntity);
+        Workflow updatedEntity = workflowRepository.save(existingEntity);
         return workflowMapper.toDto(updatedEntity);
     }
 
     @Override
     public WorkflowResponseDTO getWorkflowById(String workflowId) {
-        WorkflowEntity workflowEntity = workflowRepository.findById(workflowId)
+        Workflow workflow = workflowRepository.findById(workflowId)
                 .orElseThrow(() -> new NoSuchElementException(String.format("워크플로우 ID [%s]에 해당하는 워크플로우를 찾을 수 없습니다.", workflowId)));
 
-        return workflowMapper.toDto(workflowEntity);
+        return workflowMapper.toDto(workflow);
     }
 
     @Override
@@ -128,13 +127,13 @@ public class WorkflowServiceImpl implements WorkflowService {
         String nodesJson = workflowRepository.findNodesById(id);
 
         if (nodesJson == null || nodesJson.isEmpty()) {
-            throw new RuntimeException("No nodes found for workflow ID: " + id);
+            throw new NodeExecutionException("No nodes found for workflow ID: " + id);
         }
 
         try {
             return objectMapper.readValue(nodesJson, new TypeReference<>() {});
         } catch (Exception e) {
-            throw new RuntimeException("Error converting JSON to List<FlowNode>", e);
+            throw new InvalidInputException("Error converting JSON to List<FlowNode>");
         }
     }
 
@@ -153,7 +152,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         try {
             return objectMapper.readValue(edgesJson, new TypeReference<>() {});
         } catch (Exception e) {
-            throw new RuntimeException("Error converting JSON to List<FlowEdge>", e);
+            throw new InvalidInputException("Error converting JSON to List<FlowEdge>");
         }
     }
 } // end of class

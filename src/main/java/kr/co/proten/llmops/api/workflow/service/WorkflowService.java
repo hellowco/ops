@@ -1,17 +1,18 @@
 package kr.co.proten.llmops.api.workflow.service;
 
-import kr.co.proten.llmops.api.model.dto.response.ChatResponse;
 import kr.co.proten.llmops.api.node.dto.NodeResponse;
 import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
-import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
+import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import reactor.core.publisher.Flux;
+
+import java.io.IOException;
 
 public interface WorkflowService {
 
-    WorkflowEntity createWorkflow();
+    Workflow createWorkflow() throws IOException;
 
-    WorkflowEntity saveWorkflow(WorkflowEntity workflow);
+    Workflow saveWorkflow(Workflow workflow);
 
     WorkflowResponseDTO getWorkflowById(String workflowId) throws Exception;
 

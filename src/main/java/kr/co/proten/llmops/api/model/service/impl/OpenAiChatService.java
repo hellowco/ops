@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class OpenAiChatService extends AbstractChatService {
 
-    private static final Logger log = LoggerFactory.getLogger(OpenAiChatService.class);
     private final OpenAiConfig openAiConfig;
 
     @Value("${spring.ai.openai.api-key}")

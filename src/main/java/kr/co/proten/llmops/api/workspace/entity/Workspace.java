@@ -3,24 +3,24 @@ package kr.co.proten.llmops.api.workspace.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.co.proten.llmops.api.app.entity.AppEntity;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import kr.co.proten.llmops.api.user.entity.UserWorkspace;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static kr.co.proten.llmops.core.helpers.DateUtil.generateCurrentTimestamp;
-import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
-
 @Entity
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "workspaces")
-public class WorkspaceEntity {
+@EntityListeners(AuditingEntityListener.class)
+public class Workspace {
 
     @Id
     @Column(name = "workspace_id")
@@ -34,10 +34,13 @@ public class WorkspaceEntity {
     @Setter
     private String description;
 
-    @NotNull
-    @Column(nullable = false, updatable = false)
+    // Auditing 필드: 생성일과 수정일은 자동 업데이트됨
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     @Setter
@@ -52,8 +55,9 @@ public class WorkspaceEntity {
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<AppEntity> apps = new ArrayList<>();
 
-    //@OneToMany(mappedBy = "workspace") // 중계 테이블과 1:N 관계
-    //private List<UserWorkspace> userWorkspaces = new ArrayList<>();
+    // 중계 엔티티와 1:N 관계 (워크스페이스 하나에 여러 사용자 연결 정보)
+    @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<UserWorkspace> userWorkspaces = new ArrayList<>();
 
     @PrePersist
     public void prePersist() { // 최초 저장시 실행
@@ -61,12 +65,6 @@ public class WorkspaceEntity {
 //            this.workspaceId = generateUUID();
             this.workspaceId = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7";
         }
-        this.createdAt = generateCurrentTimestamp();
         this.isActive = true;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = generateCurrentTimestamp(); // 수정 시마다 업데이트 시간 설정
     }
 }

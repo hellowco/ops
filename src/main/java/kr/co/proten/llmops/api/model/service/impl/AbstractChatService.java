@@ -67,6 +67,8 @@ public abstract class AbstractChatService implements ChatService {
                                     ? response.getResult().getOutput().getText()
                                     : "";
 
+                            log.info("chat response :{}", outputText);
+
                             return ChatResponse.builder()
                                     .content(outputText)
                                     .finishReason("IN_PROGRESS")

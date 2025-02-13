@@ -9,9 +9,9 @@ import kr.co.proten.llmops.api.app.entity.AppEntity;
 import kr.co.proten.llmops.api.app.mapper.AppMapper;
 import kr.co.proten.llmops.api.app.repository.AppRepository;
 import kr.co.proten.llmops.api.app.service.AppService;
-import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
+import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
-import kr.co.proten.llmops.api.workspace.entity.WorkspaceEntity;
+import kr.co.proten.llmops.api.workspace.entity.Workspace;
 import kr.co.proten.llmops.api.workspace.service.WorkspaceService;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
 import kr.co.proten.llmops.core.exception.StateChangeException;
@@ -42,12 +42,12 @@ public class AppServiceImpl implements AppService {
     @Transactional
     public AppResponseDTO createApp(AppCreateDTO appCreateDTO) {
         try {
-            WorkspaceEntity workspaceDummy = createDummyWorkspace(appCreateDTO.workspace_id());
-            WorkspaceEntity savedWS = workspaceService.saveWorkspace(workspaceDummy);
+            Workspace workspaceDummy = createDummyWorkspace(appCreateDTO.workspace_id());
+            Workspace savedWS = workspaceService.saveWorkspace(workspaceDummy);
             log.info("Workspace saved: {}", savedWS);
 
-            WorkflowEntity workflow = workflowService.createWorkflow();
-            WorkflowEntity savedWF = workflowService.saveWorkflow(workflow);
+            Workflow workflow = workflowService.createWorkflow();
+            Workflow savedWF = workflowService.saveWorkflow(workflow);
             log.info("Workflow saved: {}", savedWF);
 
             AppEntity appEntity = AppEntity.builder()
@@ -101,7 +101,7 @@ public class AppServiceImpl implements AppService {
     @Transactional(readOnly = true)
     public List<AppResponseDTO> getAllApps(String workspaceId, int page, int size, String sortField, String sortBy) {
         try {
-            WorkspaceEntity workspace = validateWorkspace(workspaceId);
+            Workspace workspace = validateWorkspace(workspaceId);
 
             sortBy = sortBy.toUpperCase();
             page = page < 1 ? 0 : page - 1;
@@ -172,16 +172,16 @@ public class AppServiceImpl implements AppService {
         }
     }
 
-    private WorkspaceEntity validateWorkspace(String workspaceId) {
+    private Workspace validateWorkspace(String workspaceId) {
 //        WorkspaceEntity workspaceDummy = createDummyWorkspace(workspaceId);
-        WorkspaceEntity workspaceDummy = workspaceService.findWorkspaceById(workspaceId)
+        Workspace workspaceDummy = workspaceService.findWorkspaceById(workspaceId)
                         .orElseThrow(() -> new NoSuchElementException(String.format("워크스페이스 ID [%s]에 해당하는 워크스페이스을 찾을 수 없습니다.", workspaceId)));
         return workspaceDummy;
     }
 
-    private WorkspaceEntity createDummyWorkspace(String workspaceId) {
+    private Workspace createDummyWorkspace(String workspaceId) {
         if (workspaceId == null) return null;
-        return WorkspaceEntity
+        return Workspace
                 .builder()
                 .name("다락방")
                 .description("테스트용 더미 데이터")

@@ -1,6 +1,6 @@
 package kr.co.proten.llmops.api.workspace.service.impl;
 
-import kr.co.proten.llmops.api.workspace.entity.WorkspaceEntity;
+import kr.co.proten.llmops.api.workspace.entity.Workspace;
 import kr.co.proten.llmops.api.workspace.repository.WorkspaceRepository;
 import kr.co.proten.llmops.api.workspace.service.WorkspaceService;
 import org.springframework.stereotype.Service;
@@ -21,13 +21,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<WorkspaceEntity> findWorkspaceById(String id){
+    public Optional<Workspace> findWorkspaceById(String id){
         return workspaceRepository.findById(id);
     }
 
     @Override
     @Transactional
-    public WorkspaceEntity saveWorkspace(WorkspaceEntity workspace) {
+    public Workspace saveWorkspace(Workspace workspace) {
         return workspaceRepository.save(workspace);
     }
 }
