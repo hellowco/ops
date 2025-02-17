@@ -210,10 +210,16 @@ public class OpenSearchKnowledgeRepository {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
+        //TODO:: 지식 인덱스에서 id로 현재 삭제할 지식의 모델명 가져와서
+        // 모델명의 인덱스에서 지식명을 가지는 모든 정보를 지워야함
+        // 모델명 인덱스와 모델명_메타데이터 인덱스에서 해당하는 지식명을 가지는 것을 지워야함
+
+
         DeleteRequest deleteRequest = new DeleteRequest.Builder()
                 .index(indexName)
                 .id(id)
                 .build();
+
 
         try {
             DeleteResponse response = client.delete(deleteRequest);

@@ -71,16 +71,16 @@ public class UserServiceImpl implements UserService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
-        // access token 발급 (워크스페이스 선택 전이므로 workspaceId 미포함)
+        // access tokenLimit 발급 (워크스페이스 선택 전이므로 workspaceId 미포함)
         String accessToken = jwtService.generateBasicAccessToken(
                 user.getUserId(),
                 user.getUsername(),
                 user.getRole()
         );
-        // refresh token 발급
+        // refresh tokenLimit 발급
         String refreshTokenStr = jwtService.generateRefreshToken(user.getUserId());
 
-        // refresh token 저장 또는 업데이트
+        // refresh tokenLimit 저장 또는 업데이트
         RefreshToken refreshToken = refreshTokenRepository.findById(user.getUserId())
                 .orElse(new RefreshToken(user.getUserId(), refreshTokenStr));
         refreshToken.updateToken(refreshTokenStr);
@@ -94,7 +94,7 @@ public class UserServiceImpl implements UserService {
     public void logout(String token) {
         // access token에서 userId 추출 (유효한 토큰이라는 가정 하에)
         String userId = jwtService.extractUserId(token);
-        // refresh token 엔티티 삭제 (토큰 무효화)
+        // refresh tokenLimit 엔티티 삭제 (토큰 무효화)
         refreshTokenRepository.deleteById(userId);
     }
 
@@ -149,22 +149,41 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDTO> getUsersByName(int page, int size, String sortField, String sortBy, String keyword) {
+        page = page < 1 ? 0 : page - 1;
+
+        Pageable pageable = sortBy.equalsIgnoreCase("ASC")
+                ? PageRequest.of(page, size, Sort.by(Sort.Order.asc(sortField)))
+                : PageRequest.of(page, size, Sort.by(Sort.Order.desc(sortField)));
+
+        return userRepository.findByUsernameContainingIgnoreCase(keyword, pageable)
+                .stream()
+                .map(userMapper::fromEntity)
+                .toList();
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<String> getUserWorkspaces(String token) {
-        String userId = jwtService.extractUserId(token);
+        String tokenWithoutBearer = extractToken(token);
+
+        String userId = jwtService.extractUserId(tokenWithoutBearer);
         return userWorkspaceRepository.findWorkspaceIdsByUserId(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AuthResponseDto selectWorkspace(String token, String workspaceId) {
+        String tokenWithoutBearer = extractToken(token);
+
         // JWT 토큰에서 userId 추출 (User 엔티티의 id는 String 타입입니다)
-        String userId = jwtService.extractUserId(token);
+        String userId = jwtService.extractUserId(tokenWithoutBearer);
 
         // User 엔티티 조회: 없으면 인증 문제로 간주
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BadCredentialsException("Invalid token: user not found"));
+                .orElseThrow(() -> new BadCredentialsException("Invalid tokenLimit: user not found"));
 
         String username = user.getUsername();
         String globalRole = user.getRole(); // User 엔티티의 역할 필드 사용
@@ -180,11 +199,17 @@ public class UserServiceImpl implements UserService {
         // UserWorkspace 엔티티에 저장된 워크스페이스 내 역할 사용 (필드명이 role)
         String workspaceRole = userWorkspaceOpt.get().getRole();
 
-        // 새로운 워크스페이스 관련 access token 생성
+        // 새로운 워크스페이스 관련 access tokenLimit 생성
         String newAccessToken = jwtService.generateWorkspaceAccessToken(
                 userId, username, globalRole, workspaceId, workspaceRole);
 
         return new AuthResponseDto(userId, username, newAccessToken, null);
+    }
+
+    private static String extractToken(String token) {
+        return token.startsWith("Bearer ")
+                ? token.substring(7).trim()
+                : token.trim();
     }
 
 }

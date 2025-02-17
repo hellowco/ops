@@ -19,7 +19,25 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice(basePackages = "kr.co.proten.llmops.api")
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private static final String FAIL = "fail";
+    @ExceptionHandler(WorkspaceAlreadyExistException.class)
+    public ResponseEntity<Object> handleWorkspaceAlreadyExistException(WorkspaceAlreadyExistException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkspaceCreationException.class)
+    public ResponseEntity<Object> handleWorkspaceCreationException(WorkspaceCreationException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(AppCreationException.class)
+    public ResponseEntity<Object> handleAppCreationException(AppCreationException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
@@ -123,10 +141,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     // 공통 에러 응답 빌더
-//    protected ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {
-//        ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), message);
-//        return new ResponseEntity<>(errorResponse, status);
-//    }
     protected ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {
         ErrorResponse errorResponse = new ErrorResponse(LocalDateTime.now(), message);
         HttpHeaders headers = new HttpHeaders();

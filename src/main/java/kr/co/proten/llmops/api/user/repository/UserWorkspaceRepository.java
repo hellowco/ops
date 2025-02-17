@@ -1,8 +1,6 @@
 package kr.co.proten.llmops.api.user.repository;
 
-import kr.co.proten.llmops.api.user.entity.User;
 import kr.co.proten.llmops.api.user.entity.UserWorkspace;
-import kr.co.proten.llmops.api.workspace.entity.Workspace;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserWorkspaceRepository extends JpaRepository<User, Long> {
+public interface UserWorkspaceRepository extends JpaRepository<UserWorkspace, Long> {
     @Query("SELECT uw.workspace.workspaceId FROM UserWorkspace uw WHERE uw.user.userId = :userId")
     List<String> findWorkspaceIdsByUserId(@Param("userId") String userId);
 

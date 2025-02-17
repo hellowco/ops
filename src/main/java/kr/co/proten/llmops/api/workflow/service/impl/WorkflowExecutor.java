@@ -294,6 +294,10 @@ public class WorkflowExecutor {
                         });
             }
 
+            if (result.size() != inDegree.size()) {
+                throw new WorkflowExecutionException("Cycle detected in DAG, unable to perform topological sort.");
+            }
+
             log.info("getSortedNodes returns {}", result);
             return result;
         }

@@ -8,6 +8,7 @@ import kr.co.proten.llmops.api.user.dto.request.UserUpdateDTO;
 import kr.co.proten.llmops.api.user.mapper.UserMapper;
 import kr.co.proten.llmops.api.user.serivce.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Tag(name = "User", description = "유저 생성, 검색, 수정, 삭제하는 API")
 @RequiredArgsConstructor
 @RestController
@@ -32,7 +34,7 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> signup(@RequestBody SignupDTO signupDto) {
         Map<String, Object> resultMap = new HashMap<>();
 
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "회원가입 성공!");
         resultMap.put("response", userService.createUser(signupDto));
 
@@ -44,7 +46,7 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> login(@RequestBody UserLoginDTO loginDto) {
         Map<String, Object> resultMap = new HashMap<>();
 
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "로그인 성공!");
         resultMap.put("response", userService.login(loginDto));
 
@@ -58,7 +60,7 @@ public class UserController {
 
         String token = resolveToken(request);
         userService.logout(token);  // 내부에서 accessToken, refreshToken 무효화/삭제 처리
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "로그아웃 성공! 토큰이 삭제되었습니다.");
         resultMap.put("response", null);
 
@@ -72,7 +74,7 @@ public class UserController {
                                                           @RequestBody UserUpdateDTO updateUserDto) {
         Map<String, Object> resultMap = new HashMap<>();
 
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "사용자 정보 수정 성공!");
         resultMap.put("response", userService.updateUser(userId, updateUserDto));
 
@@ -86,7 +88,7 @@ public class UserController {
         Map<String, Object> resultMap = new HashMap<>();
 
         userService.deleteUser(userId);
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "사용자 삭제 성공!");
         resultMap.put("response", null);
 
@@ -99,7 +101,7 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> getUser(@PathVariable String userId) {
         Map<String, Object> resultMap = new HashMap<>();
 
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "사용자 조회 성공!");
         resultMap.put("response", userService.getUser(userId));
 
@@ -117,15 +119,34 @@ public class UserController {
     ) {
         Map<String, Object> resultMap = new HashMap<>();
 
-        resultMap.put("status", "SUCCESS");
+        resultMap.put("status", SUCCESS);
         resultMap.put("msg", "전체 사용자 조회 성공!");
         resultMap.put("response", userService.getAllUsers(page, size, sortField, sortBy));
 
         return ResponseEntity.ok(resultMap);
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> searchUsers(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "18") int size,
+            @RequestParam(value = "sort_field", defaultValue = "createdAt") String sortField,
+            @RequestParam(value = "sort_by", defaultValue = "desc") String sortBy
+    ) {
+        Map<String, Object> resultMap = new HashMap<>();
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", "사용자 검색 성공!");
+        resultMap.put("response", userService.getUsersByName(page, size, sortField, sortBy, keyword));
+
+        return ResponseEntity.ok(resultMap);
+    }
+
     @GetMapping("/workspaces")
-    public ResponseEntity<Map<String, Object>> getUserWorkspaces(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<Map<String, Object>> getUserWorkspaces(@RequestHeader(value = "Authorization") String token) {
+        log.info("auth:{}", token);
         Map<String, Object> resultMap = new HashMap<>();
 
         resultMap.put("status", SUCCESS);

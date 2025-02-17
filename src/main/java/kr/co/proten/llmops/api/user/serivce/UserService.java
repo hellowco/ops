@@ -6,6 +6,7 @@ import kr.co.proten.llmops.api.user.dto.request.UserUpdateDTO;
 import kr.co.proten.llmops.api.user.dto.response.AuthResponseDto;
 import kr.co.proten.llmops.api.user.dto.response.UserDTO;
 import kr.co.proten.llmops.api.user.entity.User;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -23,6 +24,8 @@ public interface UserService {
     UserDTO getUser(String userId);
 
     List<UserDTO> getAllUsers(int page, int size, String sortField, String sortBy);
+
+    List<UserDTO> getUsersByName(int page, int size, String sortField, String sortBy, String keyword);
 
     List<String> getUserWorkspaces(String token);
 

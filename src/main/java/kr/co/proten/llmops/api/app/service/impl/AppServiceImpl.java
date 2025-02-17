@@ -13,7 +13,8 @@ import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import kr.co.proten.llmops.api.workflow.service.WorkflowService;
 import kr.co.proten.llmops.api.workspace.entity.Workspace;
 import kr.co.proten.llmops.api.workspace.service.WorkspaceService;
-import kr.co.proten.llmops.core.exception.InvalidInputException;
+import kr.co.proten.llmops.core.exception.AppCreationException;
+import kr.co.proten.llmops.core.exception.ResourceNotFoundException;
 import kr.co.proten.llmops.core.exception.StateChangeException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -42,28 +43,29 @@ public class AppServiceImpl implements AppService {
     @Transactional
     public AppResponseDTO createApp(AppCreateDTO appCreateDTO) {
         try {
-            Workspace workspaceDummy = createDummyWorkspace(appCreateDTO.workspace_id());
-            Workspace savedWS = workspaceService.saveWorkspace(workspaceDummy);
-            log.info("Workspace saved: {}", savedWS);
+            Workspace workspace = validateWorkspace(appCreateDTO.workspace_id());
 
             Workflow workflow = workflowService.createWorkflow();
-            Workflow savedWF = workflowService.saveWorkflow(workflow);
-            log.info("Workflow saved: {}", savedWF);
+            Workflow savedWorkflow = workflowService.saveWorkflow(workflow);
+            log.info("Workflow saved with ID: {}", savedWorkflow.getWorkflowId());
 
             AppEntity appEntity = AppEntity.builder()
-                    .workspace(workspaceDummy)
-                    .workflow(workflow)
+                    .workspace(workspace)
+                    .workflow(savedWorkflow)
                     .name(appCreateDTO.name())
                     .description(appCreateDTO.description())
                     .build();
 
-            AppResponseDTO responseDTO = appMapper.responseToDto(appRepository.save(appEntity));
-            log.info("App saved: {}", appEntity);
+            AppEntity savedApp = appRepository.save(appEntity);
+            log.info("App created with ID: {}", savedApp.getAppId());
 
-            return responseDTO;
+            return appMapper.responseToDto(savedApp);
+        } catch (ResourceNotFoundException e) {
+            log.warn("Workspace not found: {}", e.getMessage());
+            throw e;
         } catch (Exception e) {
-            log.error("Error occurred during app creation: {}", e.getMessage(), e);
-            throw new InvalidInputException("앱 생성 실패!");
+            log.error("Unexpected error during app creation", e);
+            throw new AppCreationException("앱 생성 중 오류가 발생했습니다.");
         }
     }
 
@@ -72,14 +74,14 @@ public class AppServiceImpl implements AppService {
         validateWorkspace(workspaceId);
 
         return appMapper.responseToDto(appRepository.findById(appId)
-                .orElseThrow(() -> new NoSuchElementException(String.format("앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appId))));
+                .orElseThrow(() -> new ResourceNotFoundException(String.format("앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appId))));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<AppResponseDTO> getAppByName(AppSearchDTO appSearchDTO) {
         try {
-            validateWorkspace("8ee589ef-c7bb-4f2a-a773-630abd0de8c7");
+            validateWorkspace(appSearchDTO.workspace_id());
 
             String sortBy = appSearchDTO.sort_by().toUpperCase();
             int page = appSearchDTO.page() < 1 ? 0 : appSearchDTO.page() - 1;
@@ -93,7 +95,7 @@ public class AppServiceImpl implements AppService {
                     .toList();
         } catch (Exception e) {
             log.error("Error searching apps by name: {}", e.getMessage(), e);
-            throw new NoSuchElementException(String.format("앱 이름 [%s]에 해당하는 앱을 찾을 수 없습니다.", appSearchDTO.name()));
+            throw new ResourceNotFoundException(String.format("앱 이름 [%s]에 해당하는 앱을 찾을 수 없습니다.", appSearchDTO.name()));
         }
     }
 
@@ -117,7 +119,7 @@ public class AppServiceImpl implements AppService {
                     .toList();
         } catch (Exception e) {
             log.error("Error retrieving all apps: {}", e.getMessage(), e);
-            throw new NoSuchElementException(String.format("워크스페이스 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", workspaceId));
+            throw new ResourceNotFoundException(String.format("워크스페이스 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", workspaceId));
         }
     }
 
@@ -126,7 +128,7 @@ public class AppServiceImpl implements AppService {
     public AppResponseDTO updateApp(AppUpdateDTO appUpdateDTO) {
         try {
             AppEntity existingApp = appRepository.findById(appUpdateDTO.app_id())
-                    .orElseThrow(() -> new NoSuchElementException(String.format("수정할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appUpdateDTO.app_id())));
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format("수정할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appUpdateDTO.app_id())));
 
             existingApp.setName(appUpdateDTO.name());
             existingApp.setDescription(appUpdateDTO.description());
@@ -142,7 +144,7 @@ public class AppServiceImpl implements AppService {
     public AppResponseDTO updateAppState(AppStateDTO appStateDTO) {
         try {
             AppEntity existingApp = appRepository.findById(appStateDTO.app_id())
-                    .orElseThrow(() -> new NoSuchElementException(String.format("수정할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appStateDTO.app_id())));
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format("수정할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appStateDTO.app_id())));
 
             existingApp.setActive(appStateDTO.is_active());
 
@@ -156,7 +158,7 @@ public class AppServiceImpl implements AppService {
     @Override
     public boolean deleteApp(String id) {
         if (!appRepository.existsById(id)) {
-            throw new NoSuchElementException(String.format("삭제할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", id));
+            throw new ResourceNotFoundException(String.format("삭제할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", id));
         }
         appRepository.deleteById(id);
         return true;
@@ -168,17 +170,15 @@ public class AppServiceImpl implements AppService {
             appRepository.deleteAllById(appIdList);
             return true;
         } catch (Exception e) {
-            throw new NoSuchElementException(String.format("삭제할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appIdList.toString()));
+            throw new ResourceNotFoundException(String.format("삭제할 앱 ID [%s]에 해당하는 앱을 찾을 수 없습니다.", appIdList.toString()));
         }
     }
 
     private Workspace validateWorkspace(String workspaceId) {
-//        WorkspaceEntity workspaceDummy = createDummyWorkspace(workspaceId);
-        Workspace workspaceDummy = workspaceService.findWorkspaceById(workspaceId)
-                        .orElseThrow(() -> new NoSuchElementException(String.format("워크스페이스 ID [%s]에 해당하는 워크스페이스을 찾을 수 없습니다.", workspaceId)));
-        return workspaceDummy;
+        return workspaceService.findWorkspaceById(workspaceId)
+                        .orElseThrow(() -> new ResourceNotFoundException(String.format("워크스페이스 ID [%s]에 해당하는 워크스페이스을 찾을 수 없습니다.", workspaceId)));
     }
-
+/*
     private Workspace createDummyWorkspace(String workspaceId) {
         if (workspaceId == null) return null;
         return Workspace
@@ -187,6 +187,6 @@ public class AppServiceImpl implements AppService {
                 .description("테스트용 더미 데이터")
                 .tokenLimit(50000)
                 .build();
-    }
+    }*/
 
 }// end of class

@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
+
 @Entity
 @Getter
 @Builder
@@ -28,7 +30,7 @@ public class Workspace {
 
     @Setter
     @NotNull
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String name;
 
     @Setter
@@ -62,8 +64,7 @@ public class Workspace {
     @PrePersist
     public void prePersist() { // 최초 저장시 실행
         if (this.workspaceId == null) {
-//            this.workspaceId = generateUUID();
-            this.workspaceId = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7";
+            this.workspaceId = generateUUID();
         }
         this.isActive = true;
     }

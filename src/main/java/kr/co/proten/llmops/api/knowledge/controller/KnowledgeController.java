@@ -2,10 +2,12 @@ package kr.co.proten.llmops.api.knowledge.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import kr.co.proten.llmops.api.app.dto.request.AppStateDTO;
 import kr.co.proten.llmops.api.knowledge.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -80,4 +82,15 @@ public class KnowledgeController {
         return ResponseEntity.ok().body(resultMap);
     }
 
+//    @PutMapping("/active")
+//    @Operation(summary = "지식 활성여부 변경", description = "지식 ID로 해당 지식의 활성/비활성 여부 변경")
+//    public ResponseEntity<Map<String, Object>> updateDocumentActiveness(
+//            @RequestBody AppStateDTO appStateDTO
+//    ) {
+//        Map<String, Object> resultMap = new HashMap<>();
+//
+//        resultMap = knowledgeService.deleteKnowledge(knowledgeId);
+//
+//        return ResponseEntity.ok().body(resultMap);
+//    }
 }
