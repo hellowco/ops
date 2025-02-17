@@ -4,7 +4,7 @@ import kr.co.proten.llmops.api.app.dto.request.AppCreateDTO;
 import kr.co.proten.llmops.api.app.dto.request.AppUpdateDTO;
 import kr.co.proten.llmops.api.app.dto.response.AppResponseDTO;
 import kr.co.proten.llmops.api.app.entity.AppEntity;
-import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
+import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -15,7 +15,7 @@ public interface AppMapper {
     AppEntity createToEntity(AppCreateDTO dto);
     AppEntity updateToEntity(AppUpdateDTO dto);
 
-    default String map(WorkflowEntity workflowEntity) {
-        return workflowEntity != null ? workflowEntity.getWorkflowId() : null;
+    default String map(Workflow workflow) {
+        return workflow != null ? workflow.getWorkflowId() : null;
     }
 }

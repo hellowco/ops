@@ -53,7 +53,7 @@ public abstract class AbstractChatService implements ChatService {
                                         .build();
                             }
 
-                            // Retrieve token
+                            // Retrieve tokenLimit
                             Usage usage = response.getMetadata().getUsage();
                             if (usage != null && !(usage instanceof EmptyUsage)) {
                                 lastUsage.set(usage); // 🔹 마지막 usage 값 저장
@@ -66,6 +66,8 @@ public abstract class AbstractChatService implements ChatService {
                             String outputText = (response.getResult() != null && response.getResult().getOutput() != null)
                                     ? response.getResult().getOutput().getText()
                                     : "";
+
+                            log.info("chat response :{}", outputText);
 
                             return ChatResponse.builder()
                                     .content(outputText)

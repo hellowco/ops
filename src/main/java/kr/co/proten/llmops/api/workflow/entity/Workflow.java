@@ -23,7 +23,7 @@ import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 @DynamicUpdate
 @Getter
 @Table(name = "workflows")
-public class WorkflowEntity {
+public class Workflow {
 
     @Id
     @Column(name = "workflow_id")

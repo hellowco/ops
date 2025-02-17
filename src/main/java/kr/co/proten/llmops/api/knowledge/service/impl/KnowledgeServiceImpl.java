@@ -1,7 +1,7 @@
 package kr.co.proten.llmops.api.knowledge.service.impl;
 
 import kr.co.proten.llmops.api.knowledge.dto.KnowledgeDTO;
-import kr.co.proten.llmops.api.knowledge.entity.KnowledgeEntity;
+import kr.co.proten.llmops.api.knowledge.entity.Knowledge;
 import kr.co.proten.llmops.api.knowledge.repository.OpenSearchKnowledgeRepository;
 import kr.co.proten.llmops.api.knowledge.service.KnowledgeService;
 import kr.co.proten.llmops.core.helpers.UUIDGenerator;
@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static kr.co.proten.llmops.core.helpers.MappingLoader.loadMappingFromResources;
 
@@ -69,7 +68,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            List<KnowledgeEntity> entities = openSearchKnowledgeRepository.findAllKnowledge(KNOWLEDGE_METADATA);
+            List<Knowledge> entities = openSearchKnowledgeRepository.findAllKnowledge(KNOWLEDGE_METADATA);
 
 
             List<KnowledgeDTO> knowledgeDTOList = entities.stream()
@@ -92,7 +91,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
         //TODO:: modelName에 해당하는 인덱스가 오픈서치에 없으면 생성해야함.
         // 현재 인덱스 mapping되는데 settings가 안되어서 구현 추후로 미룸
-        KnowledgeEntity entity = KnowledgeEntity.builder()
+        Knowledge entity = Knowledge.builder()
                 .id(UUIDGenerator.generateUUID())
                 .modelName(modelName)
                 .knowledgeName(knowledgeName)
@@ -116,7 +115,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
         try {
             // ID로 문서 조회
-            KnowledgeEntity entity = openSearchKnowledgeRepository.findById(KNOWLEDGE_METADATA, id);
+            Knowledge entity = openSearchKnowledgeRepository.findById(KNOWLEDGE_METADATA, id);
 
             if (entity == null) {
                 result.put("status", "error");
@@ -155,7 +154,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         }
     }
 
-    private KnowledgeDTO toDTO(KnowledgeEntity entity) {
+    private KnowledgeDTO toDTO(Knowledge entity) {
         return KnowledgeDTO.builder()
                 .id(entity.getId())
                 .modelName(entity.getModelName())
@@ -164,8 +163,8 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .build();
     }
 
-    private KnowledgeEntity toEntity(KnowledgeDTO dto) {
-        return KnowledgeEntity.builder()
+    private Knowledge toEntity(KnowledgeDTO dto) {
+        return Knowledge.builder()
                 .id(dto.id())
                 .modelName(dto.modelName())
                 .knowledgeName(dto.knowledgeName())

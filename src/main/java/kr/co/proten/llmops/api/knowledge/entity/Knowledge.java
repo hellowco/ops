@@ -10,7 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class KnowledgeEntity {
+public class Knowledge {
     @JsonProperty("id")
     private String id;
 

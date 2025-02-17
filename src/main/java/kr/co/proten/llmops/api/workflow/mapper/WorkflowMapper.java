@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.proten.llmops.api.workflow.dto.request.WorkflowUpdateDTO;
 import kr.co.proten.llmops.api.workflow.dto.response.WorkflowResponseDTO;
-import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
+import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -15,11 +15,11 @@ public interface WorkflowMapper {
 
     // DTO -> Entity
     @Mapping(target = "graph", source = "workflow_data")
-    WorkflowEntity toEntity(WorkflowUpdateDTO dto);
+    Workflow toEntity(WorkflowUpdateDTO dto);
 
     // Entity -> DTO
     @Mapping(target = "workflowData", source = "graph")
-    WorkflowResponseDTO toDto(WorkflowEntity entity);
+    WorkflowResponseDTO toDto(Workflow entity);
 
     // Custom mapping methods
     @SuppressWarnings("unchecked")

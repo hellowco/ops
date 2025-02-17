@@ -2,8 +2,8 @@ package kr.co.proten.llmops.api.app.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import kr.co.proten.llmops.api.workflow.entity.WorkflowEntity;
-import kr.co.proten.llmops.api.workspace.entity.WorkspaceEntity;
+import kr.co.proten.llmops.api.workflow.entity.Workflow;
+import kr.co.proten.llmops.api.workspace.entity.Workspace;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -26,11 +26,11 @@ public class AppEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workspace_id")
-    private WorkspaceEntity workspace;
+    private Workspace workspace;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "workflow_id")
-    private WorkflowEntity workflow;
+    private Workflow workflow;
 
     @Setter
     @NotNull

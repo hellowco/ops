@@ -1,6 +1,6 @@
 package kr.co.proten.llmops.api.knowledge.repository;
 
-import kr.co.proten.llmops.api.knowledge.entity.KnowledgeEntity;
+import kr.co.proten.llmops.api.knowledge.entity.Knowledge;
 import kr.co.proten.llmops.core.aop.OpenSearchConnectAspect;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Repository
 public class OpenSearchKnowledgeRepository {
@@ -128,7 +127,7 @@ public class OpenSearchKnowledgeRepository {
         }
     }
 
-    public List<KnowledgeEntity> findAllKnowledge(String indexName) throws IOException {
+    public List<Knowledge> findAllKnowledge(String indexName) throws IOException {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
@@ -138,7 +137,7 @@ public class OpenSearchKnowledgeRepository {
                 .build();
 
         try{
-            SearchResponse<KnowledgeEntity> response = client.search(searchRequest, KnowledgeEntity.class);
+            SearchResponse<Knowledge> response = client.search(searchRequest, Knowledge.class);
 
             return response.hits().hits().stream()
                     .map(Hit::source)
@@ -148,11 +147,11 @@ public class OpenSearchKnowledgeRepository {
         }
     }
 
-    public String saveKnowledge(String indexName, KnowledgeEntity entity) throws IOException {
+    public String saveKnowledge(String indexName, Knowledge entity) throws IOException {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
-        IndexRequest<KnowledgeEntity> indexRequest = new IndexRequest.Builder<KnowledgeEntity>()
+        IndexRequest<Knowledge> indexRequest = new IndexRequest.Builder<Knowledge>()
                 .id(entity.getId())
                 .index(indexName)
                 .document(entity)
@@ -167,7 +166,7 @@ public class OpenSearchKnowledgeRepository {
         }
     }
 
-    public KnowledgeEntity findById(String indexName, String id) throws IOException {
+    public Knowledge findById(String indexName, String id) throws IOException {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
@@ -177,7 +176,7 @@ public class OpenSearchKnowledgeRepository {
                 .build();
 
         try {
-            GetResponse<KnowledgeEntity> response = client.get(getRequest, KnowledgeEntity.class);
+            GetResponse<Knowledge> response = client.get(getRequest, Knowledge.class);
 
             if (response.found()) {
                 return response.source();
@@ -189,18 +188,18 @@ public class OpenSearchKnowledgeRepository {
         }
     }
 
-    public String updateKnowledge(String indexName, String id, KnowledgeEntity entity) throws IOException {
+    public String updateKnowledge(String indexName, String id, Knowledge entity) throws IOException {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
-        UpdateRequest<KnowledgeEntity, KnowledgeEntity> updateRequest = new UpdateRequest.Builder<KnowledgeEntity, KnowledgeEntity>()
+        UpdateRequest<Knowledge, Knowledge> updateRequest = new UpdateRequest.Builder<Knowledge, Knowledge>()
                 .index(indexName)
                 .id(id)
                 .doc(entity) // 수정된 내용 적용
                 .build();
 
         try{
-            UpdateResponse<KnowledgeEntity> response = client.update(updateRequest, KnowledgeEntity.class);
+            UpdateResponse<Knowledge> response = client.update(updateRequest, Knowledge.class);
             return response.id(); // 업데이트된 문서 ID 반환
         } catch (Exception e) {
             throw new RuntimeException("Error while updating knowledge: ", e);
@@ -211,10 +210,16 @@ public class OpenSearchKnowledgeRepository {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
+        //TODO:: 지식 인덱스에서 id로 현재 삭제할 지식의 모델명 가져와서
+        // 모델명의 인덱스에서 지식명을 가지는 모든 정보를 지워야함
+        // 모델명 인덱스와 모델명_메타데이터 인덱스에서 해당하는 지식명을 가지는 것을 지워야함
+
+
         DeleteRequest deleteRequest = new DeleteRequest.Builder()
                 .index(indexName)
                 .id(id)
                 .build();
+
 
         try {
             DeleteResponse response = client.delete(deleteRequest);
