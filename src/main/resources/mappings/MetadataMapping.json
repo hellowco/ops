@@ -12,7 +12,7 @@
         "type": "keyword",
         "ignore_above": 256
       },
-      "index": {
+      "knowledgeName": {
         "type": "text",
         "fields": {
           "keyword": {

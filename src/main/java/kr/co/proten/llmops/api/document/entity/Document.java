@@ -23,8 +23,8 @@ public class Document {
     @JsonProperty("chunkId")
     private long chunkId;
 
-    @JsonProperty("index")
-    private String index;
+    @JsonProperty("knowledgeName")
+    private String knowledgeName;
 
     @JsonProperty("isActive")
     private boolean isActive;

@@ -5,20 +5,19 @@ import kr.co.proten.llmops.api.document.dto.MetadataDTO;
 import kr.co.proten.llmops.api.document.entity.Document;
 import kr.co.proten.llmops.api.document.entity.Metadata;
 import kr.co.proten.llmops.api.document.repository.opensearch.OpenSearchDocumentRepository;
-import kr.co.proten.llmops.api.document.service.strategy.embedding.EmbeddingProcessor;
-import kr.co.proten.llmops.api.document.service.strategy.chunk.ChunkProcessor;
 import kr.co.proten.llmops.api.document.service.DocumentService;
-import kr.co.proten.llmops.api.document.service.factory.ChunkProcessorRegistry;
 import kr.co.proten.llmops.api.document.service.factory.ChunkProcessorFactory;
+import kr.co.proten.llmops.api.document.service.factory.ChunkProcessorRegistry;
 import kr.co.proten.llmops.api.document.service.factory.EmbeddingProcessorFactory;
-import kr.co.proten.llmops.api.document.util.DocumentBuilder;
-import kr.co.proten.llmops.core.helpers.FileValidator;
-import kr.co.proten.llmops.core.helpers.TextExtractor;
 import kr.co.proten.llmops.api.document.service.storage.FileStorageService;
+import kr.co.proten.llmops.api.document.service.strategy.chunk.ChunkProcessor;
+import kr.co.proten.llmops.api.document.service.strategy.embedding.EmbeddingProcessor;
+import kr.co.proten.llmops.api.document.util.DocumentBuilder;
 import kr.co.proten.llmops.core.exception.FileStorageException;
 import kr.co.proten.llmops.core.exception.UnsupportedModelException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import kr.co.proten.llmops.core.helpers.FileValidator;
+import kr.co.proten.llmops.core.helpers.TextExtractor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,19 +28,18 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static kr.co.proten.llmops.core.helpers.FileUtil.getExtension;
 import static kr.co.proten.llmops.core.helpers.MappingLoader.convertToMap;
 
-
+@Slf4j
 @Service
 public class DocumentServiceImpl implements DocumentService {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
-
+    private static final String SUCCESS = "success";
+    private static final String FAILED = "failed";
     private final long PARALLEL_THRESHOLD;
 
     private final FileValidator fileValidator;
@@ -87,7 +85,7 @@ public class DocumentServiceImpl implements DocumentService {
             String extractedText = textExtractor.extractText(savedFile, savePath);
 
             // 결과 반환
-            result.put("status", "success");
+            result.put("status", SUCCESS);
             result.put("message", "파일 업로드 및 텍스트 추출 성공");
             result.put("response", extractedText);
         } catch (IOException e) {
@@ -171,7 +169,7 @@ public class DocumentServiceImpl implements DocumentService {
                 throw new IOException("Failed to process file: " + fileName);
             } else {
                 // 결과 반환
-                result.put("status", "success");
+                result.put("status", SUCCESS);
                 result.put("message", "청크 및 임베딩 성공!");
                 result.put("response", docId);
             }
@@ -203,11 +201,11 @@ public class DocumentServiceImpl implements DocumentService {
 
         // 결과 반환
         if(!metadataDTOList.isEmpty()){
-            result.put("status", "success");
+            result.put("status", SUCCESS);
             result.put("message", "파일 데이터 리스트 가져오기 성공");
             result.put("response", metadataDTOList);
         } else {
-            result.put("status", "failed");
+            result.put("status", FAILED);
             result.put("message", "파일 데이터 리스트 가져오기 실패");
             result.put("response", metadataDTOList);
         }
@@ -227,18 +225,18 @@ public class DocumentServiceImpl implements DocumentService {
         List<DocumentDTO> documentDTOList = (documents == null || documents.isEmpty())
                 ? Collections.emptyList()
                 : documents.stream()
-                .map(this::convertToDTO)
+                .map(DocumentDTO::fromEntity)
                 .toList();
 
         log.info("converted documents: {}", documentDTOList);
 
         // 결과 반환
         if(!documentDTOList.isEmpty()){
-            result.put("status", "success");
+            result.put("status", SUCCESS);
             result.put("message", "파일 데이터 리스트 가져오기 성공");
             result.put("response", documentDTOList);
         } else {
-            result.put("status", "failed");
+            result.put("status", FAILED);
             result.put("message", "파일 데이터 리스트 가져오기 실패");
             result.put("response", documentDTOList);
         }
@@ -247,7 +245,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Map<String, Object> getDocumentMetadata(String index, String knowledgeName, String docId) throws Exception{
+    public Map<String, Object> getDocumentMetadata(String index, String knowledgeName, String docId){
         Map<String, Object> result = new HashMap<>();
 
         MetadataDTO metadataDTO = MetadataDTO.of(openSearchDocumentRepository.getDocMetadataByDocId(index, knowledgeName, docId));
@@ -256,11 +254,11 @@ public class DocumentServiceImpl implements DocumentService {
 
         // 결과 반환
         if(metadataDTO != null){
-            result.put("status", "success");
+            result.put("status", SUCCESS);
             result.put("message", "파일 메타데이터 가져오기 성공");
             result.put("response", metadataDTO);
         } else {
-            result.put("status", "failed");
+            result.put("status", FAILED);
             result.put("message", "파일 메타데이터 가져오기 실패");
             result.put("response", null);
         }
@@ -278,9 +276,10 @@ public class DocumentServiceImpl implements DocumentService {
         String updateResponse = openSearchDocumentRepository.updateDocMetadataByDocId(indexName, docId, convertToMap(metadata));
 
         // 결과 반환
-        result.put("status", "success");
+        result.put("status", SUCCESS);
         result.put("message", "파일 수정 성공");
         result.put("response", updateResponse);
+
         return result;
     }
 
@@ -290,23 +289,11 @@ public class DocumentServiceImpl implements DocumentService {
         openSearchDocumentRepository.deleteDocByDocId(index, knowledgeName, docId);
 
         // 결과 반환
-        result.put("status", "success");
+        result.put("status", SUCCESS);
         result.put("message", "파일 삭제 성공");
-        return result;
-    }
+        result.put("response", null);
 
-    private DocumentDTO convertToDTO(Document document) {
-        // Document를 DocumentDTO로 변환 (예시)
-        return DocumentDTO.builder()
-                .id(document.getId())
-                .docId(document.getDocId())
-                .chunkId(document.getChunkId())
-                .index(document.getIndex())
-                .isActive(document.isActive())
-                .content(document.getContent())
-                .page(document.getPage())
-                .score(document.getScore())
-                .build();
+        return result;
     }
 
     /**

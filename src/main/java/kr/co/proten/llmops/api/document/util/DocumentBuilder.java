@@ -64,7 +64,7 @@ public class DocumentBuilder {
         List<Double> contentVec
     ) {
         return Document.builder()
-            .index(knowledgeName)
+            .knowledgeName(knowledgeName)
             .id(generateUUID4Doc())
             .docId(docId)
             .chunkId(chunkId)
@@ -86,7 +86,7 @@ public class DocumentBuilder {
         return Metadata.builder()
                 .id(generateUUID())
                 .docId(docId)
-                .index(knowledgeName)
+                .knowledgeName(knowledgeName)
                 .isActive(true)
                 .lastUpdatedDate(DateUtil.generateCurrentTimestamp4OpenSearch())
                 .convertDate(DateUtil.generateCurrentTimestamp4OpenSearch())

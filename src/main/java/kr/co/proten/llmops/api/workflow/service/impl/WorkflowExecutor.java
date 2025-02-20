@@ -10,13 +10,10 @@ import kr.co.proten.llmops.api.workflow.helper.ExecutionContext;
 import kr.co.proten.llmops.core.exception.NodeNotFoundException;
 import kr.co.proten.llmops.core.exception.WorkflowExecutionException;
 import lombok.extern.slf4j.Slf4j;
-import org.mapstruct.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 import java.util.*;
 import java.util.function.Function;
@@ -28,11 +25,12 @@ import java.util.stream.Collectors;
 @Component
 public class WorkflowExecutor {
     private final NodeExecutionService nodeExecutionService;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final Pattern PLACEHOLDER_PATTERN;
 
-    public WorkflowExecutor(NodeExecutionService nodeExecutionService, @Value("${workflow.placeholder.pattern}") String regexPattern) {
+    public WorkflowExecutor(NodeExecutionService nodeExecutionService, ObjectMapper objectMapper, @Value("${workflow.placeholder.pattern}") String regexPattern) {
         this.nodeExecutionService = nodeExecutionService;
+        this.objectMapper = objectMapper;
         this.PLACEHOLDER_PATTERN = Pattern.compile(regexPattern);
     }
 
@@ -83,9 +81,7 @@ public class WorkflowExecutor {
         return workflowStart
                 .concatWith(nodeExecutions)
                 .concatWith(workflowFinish)
-                .doOnError(ex -> {
-                    log.error("Error in workflow DAG: {}", ex.getMessage(), ex);
-                })
+                .doOnError(ex -> log.error("Error in workflow DAG: {}", ex.getMessage(), ex))
                 .onErrorResume(ex -> {
                     NodeResponse errorResponse =
                             new NodeResponse("WORKFLOW_ERROR", "workflow", workflowId, Map.of("error", ex.getMessage()));
@@ -223,7 +219,7 @@ public class WorkflowExecutor {
 
     private Map<String, Object> convertNodeDataToMap(FlowNode.NodeData nodeData) {
         // 1) nodeData 전체를 먼저 Map으로 변환합니다.
-        Map<String, Object> resultMap = mapper.convertValue(nodeData, new TypeReference<Map<String, Object>>() {
+        Map<String, Object> resultMap = objectMapper.convertValue(nodeData, new TypeReference<Map<String, Object>>() {
         });
 
         // 2) nodeData 안에 datasets 필드가 있고 비어있지 않다면
@@ -233,7 +229,7 @@ public class WorkflowExecutor {
             List<Map<String, Object>> datasetMapList = nodeData.getDatasets().stream()
                     .map(dataset -> {
                         // 각 Dataset 객체 -> Map
-                        Map<String, Object> dsMap = mapper.convertValue(dataset, new TypeReference<Map<String, Object>>() {
+                        Map<String, Object> dsMap = objectMapper.convertValue(dataset, new TypeReference<Map<String, Object>>() {
                         });
 
                         // 필요 시, 추가 가공 예시 (예: type 필드 주입)

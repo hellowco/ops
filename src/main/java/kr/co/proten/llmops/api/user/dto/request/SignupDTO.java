@@ -1,13 +1,26 @@
 package kr.co.proten.llmops.api.user.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Builder
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SignupDTO {
+
+    @Schema(description = "사용자 ID", example = "test1")
     private String userId;
+
+    @Schema(description = "사용자 이름", example = "test user")
     private String username;
-    private String password; // 입력된 경우 기본 생성 비밀번호(username + "1!") 대신 사용
-    private String role;     // 입력된 경우, 없으면 기본 "USER"
+
+    @Schema(description = "사용자 비밀번호", example = "password1!")
+    private String password;
+
+    @Schema(description = "사용자 권한", example = "user")
+    private String role;
 }

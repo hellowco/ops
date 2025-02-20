@@ -59,7 +59,7 @@ public class RRFMerger {
                                 .id(originalDoc.id())
                                 .docId(originalDoc.docId())
                                 .chunkId(originalDoc.chunkId())
-                                .index(originalDoc.index())
+                                .knowledgeName(originalDoc.knowledgeName())
                                 .isActive(originalDoc.isActive())
                                 .content(originalDoc.content())
                                 .page(originalDoc.page())

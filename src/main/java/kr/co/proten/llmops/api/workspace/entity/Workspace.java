@@ -1,5 +1,6 @@
 package kr.co.proten.llmops.api.workspace.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import kr.co.proten.llmops.api.app.entity.AppEntity;
@@ -28,9 +29,8 @@ public class Workspace {
     @Column(name = "workspace_id")
     private String workspaceId;
 
-    @Setter
     @NotNull
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, updatable = false)
     private String name;
 
     @Setter
@@ -50,15 +50,18 @@ public class Workspace {
     @Column(nullable = false)
     private boolean isActive;
 
+    @Setter
     @NotNull
     @Column(nullable = false)
     private int tokenLimit;
 
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<AppEntity> apps = new ArrayList<>();
 
     // 중계 엔티티와 1:N 관계 (워크스페이스 하나에 여러 사용자 연결 정보)
     @OneToMany(mappedBy = "workspace", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<UserWorkspace> userWorkspaces = new ArrayList<>();
 
     @PrePersist
