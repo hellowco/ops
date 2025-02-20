@@ -1,12 +1,12 @@
 package kr.co.proten.llmops.api.user.serivce;
 
+import kr.co.proten.llmops.api.user.dto.request.PasswordUpdateDTO;
 import kr.co.proten.llmops.api.user.dto.request.SignupDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserLoginDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserUpdateDTO;
 import kr.co.proten.llmops.api.user.dto.response.AuthResponseDto;
 import kr.co.proten.llmops.api.user.dto.response.UserDTO;
-import kr.co.proten.llmops.api.user.entity.User;
-import org.springframework.transaction.annotation.Transactional;
+import kr.co.proten.llmops.api.workspace.dto.response.WorkspaceResponseDTO;
 
 import java.util.List;
 
@@ -19,6 +19,8 @@ public interface UserService {
 
     UserDTO updateUser(String userId, UserUpdateDTO dto);
 
+    void updatePassword(String userId, PasswordUpdateDTO passwordUpdateDTO);
+
     void deleteUser(String userId);
 
     UserDTO getUser(String userId);
@@ -27,7 +29,7 @@ public interface UserService {
 
     List<UserDTO> getUsersByName(int page, int size, String sortField, String sortBy, String keyword);
 
-    List<String> getUserWorkspaces(String token);
+    List<WorkspaceResponseDTO> getUserWorkspaces(String token);
 
     AuthResponseDto selectWorkspace(String token, String workspaceId);
 }

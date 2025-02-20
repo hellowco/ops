@@ -2,10 +2,10 @@ package kr.co.proten.llmops.api.user.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import kr.co.proten.llmops.api.user.dto.request.PasswordUpdateDTO;
 import kr.co.proten.llmops.api.user.dto.request.SignupDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserLoginDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserUpdateDTO;
-import kr.co.proten.llmops.api.user.mapper.UserMapper;
 import kr.co.proten.llmops.api.user.serivce.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -77,6 +76,22 @@ public class UserController {
         resultMap.put("status", SUCCESS);
         resultMap.put("msg", "사용자 정보 수정 성공!");
         resultMap.put("response", userService.updateUser(userId, updateUserDto));
+
+        return ResponseEntity.ok(resultMap);
+    }
+
+    // 사용자 비밀번호 변경 – 본인 또는 ADMIN 접근 가능
+    @PutMapping("/{userId}/password")
+    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal")
+    public ResponseEntity<Map<String, Object>> updateUserPassword(@PathVariable String userId,
+                                                          @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        Map<String, Object> resultMap = new HashMap<>();
+
+        userService.updatePassword(userId, passwordUpdateDTO);
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", "비밀번호 변경 성공!");
+        resultMap.put("response", null);
 
         return ResponseEntity.ok(resultMap);
     }

@@ -13,6 +13,7 @@ import kr.co.proten.llmops.api.search.service.SearchService;
 import kr.co.proten.llmops.api.workflow.dto.FlowNode;
 import kr.co.proten.llmops.api.workflow.helper.ExecutionContext;
 import kr.co.proten.llmops.core.exception.NodeExecutionException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -22,17 +23,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class NodeExecutionService {
 
     private final ChatFactory chatFactory;
     private final SearchService searchService;
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    public NodeExecutionService(ChatFactory chatFactory, SearchService searchService) {
-        this.chatFactory = chatFactory;
-        this.searchService = searchService;
-    }
+    private final ObjectMapper mapper;
 
     public Flux<NodeResponse> executeNode(Node node, ExecutionContext context) {
         return Flux.defer(() -> {
@@ -89,17 +86,6 @@ public class NodeExecutionService {
         aggregated.put("text", combinedText);
         // Include other fields as necessary, or handle multiple fields
         return aggregated;
-    }
-
-    private Map<String, Object> mergeInputWithContext(
-            Map<String, Object> nodeInput,
-            ExecutionContext context
-    ) {
-        Map<String, Object> mergedInput = new HashMap<>(nodeInput);
-        // 컨텍스트 데이터를 _context 키 아래에 추가
-        mergedInput.put("_context", context.getAllOutputs());
-
-        return mergedInput;
     }
 
     private Map<String, Object> executeStart(Node node) {
@@ -173,8 +159,6 @@ public class NodeExecutionService {
         log.debug("Prompt: {}", prompt);
 
         FlowNode.NodeData.LLMModel llmModel = mapper.convertValue(llm_settings.get("model"), FlowNode.NodeData.LLMModel.class);
-
-        String query = node.getQuery();
 
         // 지식 검색에서 나온 결과 하나의 배열로 전환
         List<String> stringResults = contextList.stream()

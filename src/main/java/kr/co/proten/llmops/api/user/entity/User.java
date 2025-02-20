@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
-
 @Builder
 @Getter
 @Setter
@@ -39,6 +37,10 @@ public class User {
 
     @Column(nullable = false)
     private String role;
+
+    private String department;
+
+    private String jobTitle;
 
     // Auditing 필드: 생성일과 수정일은 자동 업데이트됨
     @CreatedDate

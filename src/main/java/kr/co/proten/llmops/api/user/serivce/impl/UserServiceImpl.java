@@ -3,6 +3,7 @@ package kr.co.proten.llmops.api.user.serivce.impl;
 import kr.co.proten.llmops.api.auth.entity.RefreshToken;
 import kr.co.proten.llmops.api.auth.repository.RefreshTokenRepository;
 import kr.co.proten.llmops.api.auth.serivce.JwtService;
+import kr.co.proten.llmops.api.user.dto.request.PasswordUpdateDTO;
 import kr.co.proten.llmops.api.user.dto.request.SignupDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserLoginDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserUpdateDTO;
@@ -14,8 +15,12 @@ import kr.co.proten.llmops.api.user.mapper.UserMapper;
 import kr.co.proten.llmops.api.user.repository.UserRepository;
 import kr.co.proten.llmops.api.user.repository.UserWorkspaceRepository;
 import kr.co.proten.llmops.api.user.serivce.UserService;
+import kr.co.proten.llmops.api.workspace.dto.response.WorkspaceResponseDTO;
+import kr.co.proten.llmops.api.workspace.mapper.WorkspaceMapper;
+import kr.co.proten.llmops.core.exception.InvalidInputException;
 import kr.co.proten.llmops.core.exception.UserAlreadyExistException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -30,6 +35,7 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -39,6 +45,7 @@ public class UserServiceImpl implements UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final WorkspaceMapper workspaceMapper;
     private final JwtService jwtService;
 
     @Override
@@ -54,9 +61,13 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.hasText(dto.getPassword())) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
-        // role 지정 (ADMIN 전용 작업이므로 컨트롤러에서 추가 검증)
         if (StringUtils.hasText(dto.getRole())) {
-            user.setRole(dto.getRole());
+            String role = dto.getRole();
+            if (role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("USER")) {
+                user.setRole(role);
+            } else {
+                throw new InvalidInputException("Invalid role selected for workspace");
+            }
         }
         return userMapper.fromEntity(userRepository.save(user));
     }
@@ -104,15 +115,31 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (StringUtils.hasText(dto.getUsername())) {
-            user.setUsername(dto.getUsername());
-            // email은 username 기반으로 자동 재생성
-            user.setEmail(dto.getUsername() + "@proten.co.kr");
+        if (StringUtils.hasText(dto.getUserEmail())) {
+            user.setEmail(dto.getUserEmail());
         }
-        if (StringUtils.hasText(dto.getPassword())) {
-            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (StringUtils.hasText(dto.getDepartment())) {
+            user.setDepartment(dto.getDepartment());
         }
+        if (StringUtils.hasText(dto.getJobTitle())) {
+            user.setJobTitle(dto.getJobTitle());
+        }
+
         return userMapper.fromEntity(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(String userId, PasswordUpdateDTO passwordUpdateDTO) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if(passwordEncoder.matches(passwordUpdateDTO.getPassword(),user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(passwordUpdateDTO.getNewPassword()));
+            userRepository.save(user);
+        } else {
+            throw new InvalidInputException("Invalid password");
+        }
     }
 
     @Override
@@ -166,11 +193,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> getUserWorkspaces(String token) {
+    public List<WorkspaceResponseDTO> getUserWorkspaces(String token) {
         String tokenWithoutBearer = extractToken(token);
 
         String userId = jwtService.extractUserId(tokenWithoutBearer);
-        return userWorkspaceRepository.findWorkspaceIdsByUserId(userId);
+
+        return userWorkspaceRepository.findWorkspacesByUserId(userId)
+                .stream()
+                .map(workspaceMapper::entityToResponse)
+                .toList();
     }
 
     @Override

@@ -17,8 +17,8 @@ public class Metadata {
     @JsonProperty("docId")
     private String docId;
 
-    @JsonProperty("index")
-    private String index;
+    @JsonProperty("knowledgeName")
+    private String knowledgeName;
 
     @JsonProperty("description")
     private String description;

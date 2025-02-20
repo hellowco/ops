@@ -2,10 +2,7 @@ package kr.co.proten.llmops.api.user.entity;
 
 import jakarta.persistence.*;
 import kr.co.proten.llmops.api.workspace.entity.Workspace;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -14,10 +11,14 @@ import java.time.LocalDateTime;
 
 @Builder
 @Getter
+@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user_workspace")
+@Table(
+        name = "user_workspace",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "workspace_id"})
+)
 @EntityListeners(AuditingEntityListener.class)
 public class UserWorkspace {
 

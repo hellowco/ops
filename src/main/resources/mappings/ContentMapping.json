@@ -15,7 +15,7 @@
       "chunkId": {
         "type": "long"
       },
-      "index": {
+      "knowledgeName": {
         "type": "text",
         "fields": {
           "keyword": {
