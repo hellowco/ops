@@ -25,6 +25,7 @@ public class WorkspaceController {
 
     @PostMapping("/")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "워크스페이스 생성", description = "워크스페이스 생성하는 API (관리자만 가능)")
     public ResponseEntity<Map<String, Object>> createWorkspace(@RequestBody WorkspaceRequestDTO workspaceRequestDTO) {
         Map<String, Object> resultMap;
 
@@ -33,20 +34,9 @@ public class WorkspaceController {
         return ResponseEntity.ok().body(resultMap);
     }
 
-   /* @PutMapping("/{workspaceId}")
-    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isOwner(#workspaceId)")
-    public ResponseEntity<Map<String, Object>> updateWorkspace(
-            @PathVariable String workspaceId,
-            @RequestBody WorkspaceRequestDTO workspaceRequestDTO
-    ) {
-        Map<String, Object> resultMap;
-
-        resultMap = workspaceService.updateWorkspace(workspaceId, workspaceRequestDTO);
-
-        return ResponseEntity.ok(resultMap);
-    }*/
    @PatchMapping(value = "/{workspaceId}", consumes = "application/json-patch+json")
    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isOwner(#workspaceId)")
+   @Operation(summary = "워크스페이스 수정", description = "워크스페이스 정보 및 속해 있는 사용자의 추가/삭제/권한변경 API (관리자 및 소유자만 가능)")
    public ResponseEntity<Map<String, Object>> updateWorkspace(
            @PathVariable String workspaceId,
            @RequestBody List<CustomPatchOperation> patchOperations
@@ -60,6 +50,7 @@ public class WorkspaceController {
 
     @DeleteMapping("/{workspaceId}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "워크스페이스 삭제", description = "해당ID의 워크스페이스 삭제하는 API (관리자만 가능)")
     public ResponseEntity<Map<String, Object>> deleteWorkspace(@PathVariable String workspaceId) {
         Map<String, Object> resultMap;
 
@@ -70,6 +61,7 @@ public class WorkspaceController {
 
     @GetMapping("/{workspaceId}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "워크스페이스 ID로 조회", description = "워크스페이스 ID로 조회하는 API (관리자만 가능)")
     public ResponseEntity<Map<String, Object>> getWorkspace(@PathVariable String workspaceId) {
         Map<String, Object> resultMap;
 
@@ -80,6 +72,7 @@ public class WorkspaceController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "모든 워크스페이스 조회", description = "모든 워크스페이스 조회하는 API (관리자만 가능)")
     public ResponseEntity<Map<String, Object>> getAllWorkspaces(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "18") int size,
@@ -93,8 +86,8 @@ public class WorkspaceController {
         return ResponseEntity.ok(resultMap);
     }
 
-    @Operation(summary = "이름으로 워크스페이스 검색 (페이지네이션 지원)")
     @GetMapping("/search")
+    @Operation(summary = "워크스페이스 이름으로 조회", description = "워크스페이스 이름으로 조회하는 API (관리자만 가능)")
     public ResponseEntity<Map<String, Object>> searchWorkspaces(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
