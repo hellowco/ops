@@ -28,12 +28,14 @@ public class SearchRepository {
 
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
+        String escapedQuery = escapeLuceneSpecialChars(query);
+
         Query simpleQueryStringQuery = Query.of(q -> q
                 .bool(b -> b
                         .must(List.of( // Ensure `must` is an array
                                 Query.of(mq -> mq
                                         .queryString(sqs -> sqs
-                                                .query(query)
+                                                .query(escapedQuery)
                                                 .analyzer("pro10_kr_noun") //자연어에서 명사만 추출
                                                 .fields("content^2.0", "content.exact^2.0") // Pass fields as a list
                                                 .defaultOperator(Operator.Or) // 자연어인 경우, and면 결과가 안나올수 있음
@@ -184,6 +186,21 @@ public class SearchRepository {
         } catch (Exception e) {
             throw new RuntimeException("SearchRequest를 JSON으로 변환하는 데 실패했습니다.", e);
         }
+    }
+
+    /**
+     * Lucene 예약어 특수문자(!, (, ), ^)를 이스케이프 처리하는 메서드.
+     *
+     * @param input 원본 쿼리 문자열
+     * @return 이스케이프 처리된 문자열
+     */
+    private static String escapeLuceneSpecialChars(String input) {
+        if (input == null) {
+            return null;
+        }
+        // 예약어 특수문자 목록: !, (, ), ^
+        // 정규 표현식을 사용하여 해당 문자 앞에 백슬래시 추가
+        return input.replaceAll("([!()^])", "\\\\$1");
     }
 
 }

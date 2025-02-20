@@ -171,7 +171,7 @@ public class UserController {
 
     @GetMapping("/workspaces")
     @Operation(summary = "사용자의 워크스페이스 조회", description = "사용자가 속해 있는 워크스페이스 조회하는 API")
-    public ResponseEntity<Map<String, Object>> getUserWorkspaces(@RequestHeader(value = "Authorization") String token) {
+    public ResponseEntity<Map<String, Object>> getUserWorkspaces(@RequestHeader(value = "Authorization", required = false) String token) {
         log.info("auth:{}", token);
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -185,7 +185,7 @@ public class UserController {
     @PostMapping("/select-workspace")
     @Operation(summary = "사용자의 워크스페이스 선택", description = "사용자가 선택한 워크스페이스로 새로운 토큰을 받는 API")
     public ResponseEntity<Map<String, Object>> selectWorkspace(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token,
             @RequestHeader("Workspace-Id") String workspaceId) {
         Map<String, Object> resultMap = new HashMap<>();
 

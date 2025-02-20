@@ -42,7 +42,7 @@ public class AppController {
     @Operation(summary = "하나의 앱 반환", description = "앱 ID로 앱 객체 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAppById(
             @PathVariable(value = "app_id") String appId,
-            @RequestParam(value = "workspace_id", defaultValue = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7") String workspaceId
+            @RequestParam(value = "workspace_id") String workspaceId
     ) {
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -56,7 +56,7 @@ public class AppController {
     @GetMapping
     @Operation(summary = "워크스페이스 내의 모든 앱 리스트", description = "워크스페이스 ID로 앱 객체 리스트 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAllApps(
-            @RequestParam(value = "workspace_id", defaultValue = "8ee589ef-c7bb-4f2a-a773-630abd0de8c7") String workspaceId,
+            @RequestParam(value = "workspace_id") String workspaceId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "18") int size,
             @RequestParam(value = "sort_field", defaultValue = "createdAt") String sortField,

@@ -62,7 +62,7 @@ public class KnowledgeController {
     public ResponseEntity<Map<String,Object>> updateKnowledge(
             @RequestParam(value = "knowledgeId") String knowledgeId,
             @RequestParam(value = "description") String description
-    ) throws Exception {
+    ) {
         Map<String, Object> resultMap;
 
         resultMap = knowledgeService.updateKnowledge(knowledgeId, description);
@@ -81,16 +81,4 @@ public class KnowledgeController {
 
         return ResponseEntity.ok().body(resultMap);
     }
-
-//    @PutMapping("/active")
-//    @Operation(summary = "지식 활성여부 변경", description = "지식 ID로 해당 지식의 활성/비활성 여부 변경")
-//    public ResponseEntity<Map<String, Object>> updateDocumentActiveness(
-//            @RequestBody AppStateDTO appStateDTO
-//    ) {
-//        Map<String, Object> resultMap = new HashMap<>();
-//
-//        resultMap = knowledgeService.deleteKnowledge(knowledgeId);
-//
-//        return ResponseEntity.ok().body(resultMap);
-//    }
 }

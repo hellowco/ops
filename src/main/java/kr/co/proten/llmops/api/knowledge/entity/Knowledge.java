@@ -22,4 +22,7 @@ public class Knowledge {
 
     @JsonProperty("description")
     private String description;
+
+    @JsonProperty("isActive")
+    private String isActive;
 }
