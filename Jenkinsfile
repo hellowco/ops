@@ -1,27 +1,25 @@
-pipeline{
+pipeline {
     agent any
-    environment {
-        SCRIPT_PATH = '/var/jenkins_home/custom/llmops-api-dev'
+    parameters {
+        choice(name: 'DEPLOY_ENV', choices: ['prod', 'dev'], description: '배포 환경 선택 (prod 또는 dev)')
     }
     tools {
         gradle 'gradle 8.11.1'
     }
-    stages{
+    stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-		stage('Set Branch Specific Settings') {
+        stage('Set Environment Settings') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'main') {
-                        env.SCRIPT_PATH = '/var/jenkins_home/custom/llmops-api-main'
-                        echo "Main branch detected. Using prod settings."
-                    } else if (env.BRANCH_NAME == 'dev') {
-                        env.SCRIPT_PATH = '/var/jenkins_home/custom/llmops-api-dev'
-                        echo "Dev branch detected. Using dev settings."
-                    }
+                    // 선택한 환경에 따라 스크립트 경로를 동적으로 설정
+                    def scriptPath = (params.DEPLOY_ENV == 'prod') ? '/var/jenkins_home/custom/llmops-api-main' : '/var/jenkins_home/custom/llmops-api-dev'
+                    echo "${params.DEPLOY_ENV} 환경 선택됨. 스크립트 경로: ${scriptPath}"
+                    // env에 저장하면 이후 단계에서도 사용 가능
+                    env.SCRIPT_PATH = scriptPath
                 }
             }
         }
@@ -37,7 +35,7 @@ pipeline{
                 }
             }
         }
-        stage('Prepare'){
+        stage('Prepare') {
             steps {
                 sh 'gradle clean'
             }
@@ -53,7 +51,7 @@ pipeline{
                     def deployDir = env.SCRIPT_PATH
                     sh "mkdir -p ${deployDir}"
                     
-                    if (env.BRANCH_NAME == 'main') {
+                    if (params.DEPLOY_ENV == 'prod') {
                         echo "Deploying production build"
                         sh """
                             cp ./deploy/prod/Dockerfile ${deployDir}
@@ -63,7 +61,7 @@ pipeline{
                             chmod +x ${deployDir}/rebuild_and_run.sh
                             ${deployDir}/rebuild_and_run.sh
                         """
-                    } else if (env.BRANCH_NAME == 'dev') {
+                    } else if (params.DEPLOY_ENV == 'dev') {
                         echo "Deploying development build"
                         sh """
                             cp ./deploy/dev/Dockerfile ${deployDir}
@@ -77,16 +75,16 @@ pipeline{
                 }
             }
         }
-    }    
+    }
     post {
         success {
             slackSend (
-                message: "성공: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). 최근 커밋: '${env.GIT_COMMIT_MESSAGE}'",
+                message: "성공: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). 최근 커밋: '${env.GIT_COMMIT_MESSAGE}'"
             )
         }
         failure {
             slackSend (
-                message: "실패: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). 최근 커밋: '${env.GIT_COMMIT_MESSAGE}'",
+                message: "실패: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL}). 최근 커밋: '${env.GIT_COMMIT_MESSAGE}'"
             )
         }
     }
