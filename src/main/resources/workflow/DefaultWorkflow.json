@@ -1,5 +1,4 @@
 {
-  "hash": "8f14e693037397e66ae77a7a1028781782a74a1e8da587da3f5e89f8e34d5eff",
   "graph": {
     "edges": [
       {
@@ -55,7 +54,7 @@
           "title": "시작",
           "selected": false
         },
-        "type": "custom",
+        "type": "startNode",
         "width": 243,
         "height": 115,
         "position": {
@@ -92,7 +91,7 @@
           ],
           "selected": false
         },
-        "type": "custom",
+        "type": "knowledgeNode",
         "width": 243,
         "height": 91,
         "position": {
@@ -149,7 +148,7 @@
             ]
           }
         },
-        "type": "custom",
+        "type": "llmNode",
         "width": 243,
         "height": 97,
         "position": {
@@ -173,7 +172,7 @@
           "selected": true,
           "variables": ["{{#1735867392736.text#}}"]
         },
-        "type": "custom",
+        "type": "endNode",
         "width": 243,
         "height": 89,
         "position": {
