@@ -1,13 +1,12 @@
 package kr.co.proten.llmops.api.knowledge.service;
 
-import java.io.IOException;
 import java.util.Map;
 
 public interface KnowledgeService {
 
-    boolean createIndexWithMapping(String indexName) throws IOException;
+    String createIndex(String indexName, int dimension);
 
-    boolean deleteIndex(String indexName) throws IOException;
+    boolean deleteIndex(String indexName);
 
     Map<String, Object> getKnowledgeList();
 

@@ -45,7 +45,8 @@ public class SecurityConfig {
             "/api/user/login",
             "/api/user/signup",
             "/swagger-ui/**",
-            "/v3/api-docs/**"
+            "/v3/api-docs/**",
+            "/api/knowledge/index"
     };
 
     // SSE 엔드포인트(Flux 스트림 등)

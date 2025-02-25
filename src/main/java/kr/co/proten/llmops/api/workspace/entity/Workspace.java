@@ -16,6 +16,7 @@ import java.util.List;
 
 import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 
+@ToString
 @Entity
 @Getter
 @Builder

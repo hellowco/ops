@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.hasText(dto.getRole())) {
             String role = dto.getRole();
             if (role.equalsIgnoreCase("ADMIN") || role.equalsIgnoreCase("USER")) {
-                user.setRole(role);
+                user.setRole(role.toUpperCase());
             } else {
                 throw new InvalidInputException("Invalid role selected for workspace");
             }

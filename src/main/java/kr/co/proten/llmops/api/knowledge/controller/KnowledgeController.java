@@ -7,6 +7,7 @@ import kr.co.proten.llmops.api.knowledge.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,17 +22,17 @@ public class KnowledgeController {
         this.knowledgeService = knowledgeService;
     }
 
-//    @PostMapping("/index")
-//    @Operation(summary = "Create Index API", description = "인덱스 생성 API")
-//    public ResponseEntity<?> createIndex(@RequestParam(value="indexName") String indexName) throws IOException {
-//        return ResponseEntity.ok().body(indexService.createIndexWithMapping(indexName));
-//    }
-//
-//    @DeleteMapping("/index")
-//    @Operation(summary = "Delete Index API", description = "인덱스 삭제 API")
-//    public ResponseEntity<?> deleteIndex(@RequestParam(value="indexName") String indexName) throws IOException {
-//        return ResponseEntity.ok().body(indexService.deleteIndex(indexName));
-//    }
+/*    @PostMapping("/index")
+    @Operation(summary = "Create Index API", description = "인덱스 생성 API")
+    public ResponseEntity<?> createIndex(@RequestParam(value="indexName") String indexName) throws IOException {
+        return ResponseEntity.ok().body(knowledgeService.createIndexWithMapping(indexName));
+    }
+
+    @DeleteMapping("/index")
+    @Operation(summary = "Delete Index API", description = "인덱스 삭제 API")
+    public ResponseEntity<?> deleteIndex(@RequestParam(value="indexName") String indexName) throws IOException {
+        return ResponseEntity.ok().body(knowledgeService.deleteIndex(indexName));
+    }*/
 
     @PostMapping("/")
     @Operation(summary = "지식 추가", description = "Create Knowledge API")

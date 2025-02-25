@@ -2,14 +2,19 @@ package kr.co.proten.llmops.api.knowledge.repository;
 
 import kr.co.proten.llmops.api.knowledge.entity.Knowledge;
 import kr.co.proten.llmops.core.aop.OpenSearchConnectAspect;
+import kr.co.proten.llmops.core.exception.IndexCreationException;
+import org.apache.http.entity.ContentType;
+import org.apache.http.nio.entity.NStringEntity;
+import org.apache.http.util.EntityUtils;
+import org.opensearch.client.Request;
+import org.opensearch.client.Response;
+import org.opensearch.client.RestClient;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
-import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.search.Hit;
-import org.opensearch.client.opensearch.indices.CreateIndexRequest;
 import org.opensearch.client.opensearch.indices.DeleteIndexRequest;
-import org.opensearch.client.opensearch.indices.IndexSettings;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -24,91 +29,32 @@ public class OpenSearchKnowledgeRepository {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    public void createIndex(String indexName, Map<String, Object> mapping) throws IOException {
+    public boolean createIndex(String indexName, int dimension) {
         // AOP에서 ThreadLocal을 통해 클라이언트 가져오기
         OpenSearchClient client = OpenSearchConnectAspect.getClient();
 
-        // 맵핑 정보 추출
-//        @SuppressWarnings("unchecked")
-//        Map<String, Object> mappings = (Map<String, Object>) mapping.get("mappings");
-//        @SuppressWarnings("unchecked")
-//        Map<String, Object> rawProperties = (Map<String, Object>) mappings.get("properties");
+        String mappingJson = getMappingJson(dimension);
 
-        // 설정 정보 추출
-        @SuppressWarnings("unchecked")
-//        Map<String, Object> settings = (Map<String, Object>) mapping.get("settings");
+        // OpenSearchClient 내부의 low-level RestClient 추출
+        RestClient restClient = ((RestClientTransport) client._transport()).restClient();
 
-//        Map<String, Property> properties = convertToProperties(rawProperties);
+        // Request 객체 생성: HTTP 메서드와 엔드포인트 지정
+        Request request = new Request("PUT", "/" + indexName);
+        // JSON 본문 설정
+        request.setEntity(new NStringEntity(mappingJson, ContentType.APPLICATION_JSON));
 
-        // 설정 변환
-        IndexSettings indexSettings = (IndexSettings) mapping.get("settings");
-
-        TypeMapping typeMapping = (TypeMapping) mapping.get("mappings");
-
+        // 요청 전송 및 응답 받기
+        Response response;
         try {
-
-//        TypeMapping typeMapping = new TypeMapping.Builder()
-//                .properties(properties)
-//                .build();
-
-        CreateIndexRequest createIndexRequest = new CreateIndexRequest.Builder()
-                .index(indexName)
-                .mappings(typeMapping)
-                .settings(indexSettings)
-                .build();
-        client.indices().create(createIndexRequest);
-        log.info("Index created: {}", indexName);
-        }catch (Exception e){
-            e.printStackTrace();
+            response = restClient.performRequest(request);
+            log.info("Index Creation Response code: {}", response.getStatusLine().getStatusCode());
+            String responseBody = EntityUtils.toString(response.getEntity());
+            log.info("Index Creation Response body: {}", responseBody);
+        } catch (IOException e) {
+            throw new IndexCreationException("Error while creating index: " + indexName);
         }
 
-    }
-
-    /**
-     * Gets doc id and doc name by index.
-     *
-     * @param indexName   the index name
-     * @param knowledgeName the storage name
-     * @return the doc id and doc name by index
-     */
-    public List<Map<String, String>> getDocIdAndDocNameByIndex(String indexName, String knowledgeName) {
-
-        OpenSearchClient client = OpenSearchConnectAspect.getClient();
-
-        // SearchRequest 생성
-        SearchRequest searchRequest = new SearchRequest.Builder()
-                .index(indexName)
-                .query(q -> q
-                        .term(t -> t
-                                .field("index.keyword")
-                                .value(FieldValue.of(knowledgeName))
-                        )
-                )
-                .source(s -> s
-                        .filter(f -> f.includes("docId", "docName")) // docId와 docName 필드만 반환
-                )
-                .build();
-
-        try {
-            // 요청 실행
-            SearchResponse<Object> response = client.search(searchRequest, Object.class);
-
-            // 결과 추출
-            List<Map<String, String>> docList = new ArrayList<>();
-            for (Hit<Object> hit : response.hits().hits()) {
-                Map<String, Object> source = (Map<String, Object>) hit.source();
-                if (source != null) {
-                    String docId = source.get("docId").toString();
-                    String docName = source.get("docName").toString();
-                    docList.add(Map.of("docId", docId, "docName", docName));
-                }
-            }
-
-            // docList 반환
-            return docList;
-        } catch (Exception e) {
-            throw new RuntimeException("Error retrieving docId and docName list by index: ", e);
-        }
+        return response.getStatusLine().getStatusCode() == 200;
     }
 
     public void deleteIndex(String indexName) {
@@ -229,4 +175,345 @@ public class OpenSearchKnowledgeRepository {
         }
     }
 
+    /**
+     * Gets doc id and doc name by index.
+     *
+     * @param indexName   the index name
+     * @param knowledgeName the storage name
+     * @return the doc id and doc name by index
+     */
+    public List<Map<String, String>> getDocIdAndDocNameByIndex(String indexName, String knowledgeName) {
+
+        OpenSearchClient client = OpenSearchConnectAspect.getClient();
+
+        // SearchRequest 생성
+        SearchRequest searchRequest = new SearchRequest.Builder()
+                .index(indexName)
+                .query(q -> q
+                        .term(t -> t
+                                .field("index.keyword")
+                                .value(FieldValue.of(knowledgeName))
+                        )
+                )
+                .source(s -> s
+                        .filter(f -> f.includes("docId", "docName")) // docId와 docName 필드만 반환
+                )
+                .build();
+
+        try {
+            // 요청 실행
+            SearchResponse<Object> response = client.search(searchRequest, Object.class);
+
+            // 결과 추출
+            List<Map<String, String>> docList = new ArrayList<>();
+            for (Hit<Object> hit : response.hits().hits()) {
+                Map<String, Object> source = (Map<String, Object>) hit.source();
+                if (source != null) {
+                    String docId = source.get("docId").toString();
+                    String docName = source.get("docName").toString();
+                    docList.add(Map.of("docId", docId, "docName", docName));
+                }
+            }
+
+            // docList 반환
+            return docList;
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving docId and docName list by index: ", e);
+        }
+    }
+
+    private static String getMappingJson(int dimension) {
+        return """
+                {
+                  "mappings": {
+                    "properties": {
+                      "@timestamp": {
+                        "type": "date"
+                      },
+                      "id": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                      },
+                      "docId": {
+                        "type": "keyword",
+                        "ignore_above": 256
+                      },
+                      "chunkId": {
+                        "type": "long"
+                      },
+                      "knowledgeName": {
+                        "type": "text",
+                        "fields": {
+                          "keyword": {
+                            "type": "keyword",
+                            "ignore_above": 256
+                          }
+                        }
+                      },
+                      "isActive": {
+                        "type": "boolean"
+                      },
+                      "content": {
+                        "type": "text",
+                        "fields": {
+                          "exact": {
+                            "type": "text",
+                            "analyzer": "standard_analyzer"
+                          }
+                        },
+                        "analyzer": "pro10_kr",
+                        "search_analyzer": "pro10_search"
+                      },
+                      "content_vec": {
+                        "type": "knn_vector",
+                        "dimension": %d,
+                        "method": {
+                          "engine": "faiss",
+                          "space_type": "innerproduct",
+                          "name": "hnsw",
+                          "parameters": {
+                            "ef_construction": 512,
+                            "m": 64
+                          }
+                        }
+                      },
+                      "page": {
+                        "type": "long"
+                      }
+                    }
+                  },
+                  "settings": {
+                    "index": {
+                      "similarity": {
+                        "default": {
+                          "type": "BM25",
+                          "b": 0.0,
+                          "k1": 1.2
+                        }
+                      },
+                      "number_of_shards": 5,
+                      "number_of_replicas": 1,
+                      "max_ngram_diff": 20,
+                      "max_result_window": 1000000,
+                      "max_inner_result_window": 1000,
+                      "blocks": {
+                        "read_only_allow_delete": null
+                      }
+                    },
+                    "knn": "true",
+                    "analysis": {
+                      "filter": {
+                        "edge_filter": {
+                          "type": "edge_ngram",
+                          "min_gram": "1",
+                          "max_gram": "20"
+                        },
+                        "ngram_filter": {
+                          "type": "ngram",
+                          "min_gram": "2",
+                          "max_gram": "20"
+                        }
+                      },
+                      "char_filter": {
+                        "remove_whitespace_filter": {
+                          "pattern": " ",
+                          "type": "pattern_replace",
+                          "replacement": ""
+                        },
+                        "remove_filter": {
+                          "pattern": "[_]",
+                          "type": "pattern_replace",
+                          "replacement": " "
+                        },
+                        "replace_special_char_filter": {
+                          "pattern": "[^가-힣xfe0-9a-zA-Z\\\\s]",
+                          "type": "pattern_replace",
+                          "replacement": " "
+                        },
+                        "remove_special_char_filter": {
+                          "pattern": "[^가-힣xfe0-9a-zA-Z\\\\s]",
+                          "type": "pattern_replace",
+                          "replacement": ""
+                        }
+                      },
+                      "analyzer": {
+                        "edge_analyzer": {
+                          "filter": [
+                            "lowercase"
+                          ],
+                          "tokenizer": "edge_ngram"
+                        },
+                        "ngram_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "ngram_filter"
+                          ],
+                          "tokenizer": "my_whitespace"
+                        },
+                        "category_analyzer": {
+                          "tokenizer": "category_tokenizer"
+                        },
+                        "reverse_ngram_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "reverse",
+                            "edge_filter",
+                            "reverse"
+                          ],
+                          "tokenizer": "standard"
+                        },
+                        "reverse_ngram_sc_ws_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "reverse",
+                            "edge_filter",
+                            "reverse"
+                          ],
+                          "char_filter": [
+                            "remove_special_char_filter",
+                            "remove_whitespace_filter"
+                          ],
+                          "tokenizer": "standard"
+                        },
+                        "bigram_search_analyzer": {
+                          "filter": [
+                            "lowercase"
+                          ],
+                          "tokenizer": "standard"
+                        },
+                        "front_ngram_sc_ws_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "edge_filter"
+                          ],
+                          "char_filter": [
+                            "remove_special_char_filter",
+                            "remove_whitespace_filter"
+                          ],
+                          "tokenizer": "standard"
+                        },
+                        "bigram_analyzer": {
+                          "filter": [
+                            "lowercase"
+                          ],
+                          "tokenizer": "my_bigram"
+                        },
+                        "pattern_analyzer": {
+                          "filter": [
+                            "lowercase"
+                          ],
+                          "tokenizer": "my_pattern"
+                        },
+                        "keyword_analyzer": {
+                          "filter": [
+                            "lowercase"
+                          ],
+                          "char_filter": [
+                            "remove_special_char_filter",
+                            "remove_whitespace_filter"
+                          ],
+                          "tokenizer": "my_keyword"
+                        },
+                        "front_ngram_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "edge_filter"
+                          ],
+                          "tokenizer": "standard"
+                        },
+                        "whitespace_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "trim"
+                          ],
+                          "tokenizer": "my_whitespace"
+                        },
+                        "standard_analyzer": {
+                          "type": "custom",
+                          "filter": [
+                            "lowercase",
+                            "trim"
+                          ],
+                          "tokenizer": "my_standard"
+                        },
+                        "ngram_sc_ws_analyzer": {
+                          "filter": [
+                            "lowercase",
+                            "ngram_filter"
+                          ],
+                          "char_filter": [
+                            "remove_special_char_filter",
+                            "remove_whitespace_filter"
+                          ],
+                          "tokenizer": "standard"
+                        },
+                        "auth_analyzer": {
+                          "filter": [
+                            "lowercase"
+                          ],
+                          "char_filter": [
+                            "remove_filter"
+                          ],
+                          "tokenizer": "standard"
+                        }
+                      },
+                      "tokenizer": {
+                        "my_whitespace": {
+                          "type": "whitespace",
+                          "max_token_length": "30"
+                        },
+                        "my_keyword": {
+                          "type": "keyword",
+                          "max_token_length": "20"
+                        },
+                        "my_bigram": {
+                          "token_chars": [
+                            "letter",
+                            "digit",
+                            "punctuation"
+                          ],
+                          "max_token_length": "20",
+                          "min_gram": "2",
+                          "type": "ngram",
+                          "max_gram": "20"
+                        },
+                        "my_standard": {
+                          "type": "standard",
+                          "max_token_length": "30"
+                        },
+                        "my_pattern": {
+                          "pattern": "[\\\\^\\\\^]",
+                          "type": "pattern"
+                        },
+                        "category_tokenizer": {
+                          "pattern": "[\\\\/]",
+                          "type": "pattern"
+                        },
+                        "edge_ngram": {
+                          "token_chars": [
+                            "letter",
+                            "digit",
+                            "punctuation"
+                          ],
+                          "min_gram": "1",
+                          "type": "edge_ngram",
+                          "max_gram": "20"
+                        },
+                        "my_ngram": {
+                          "token_chars": [
+                            "letter",
+                            "digit",
+                            "punctuation"
+                          ],
+                          "max_token_length": "20",
+                          "min_gram": "1",
+                          "type": "ngram",
+                          "max_gram": "20"
+                        }
+                      }
+                    }
+                  }
+                }
+                """.formatted(dimension);
+    }
 }

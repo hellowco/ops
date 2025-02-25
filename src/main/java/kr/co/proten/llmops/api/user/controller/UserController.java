@@ -31,7 +31,7 @@ public class UserController {
     // ADMIN 전용: 신규 사용자 생성 (가입)
     @PostMapping("/signup")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "사용자 생성", description = "사용자 생성 API (관리자만 가능)")
+    @Operation(summary = "사용자 생성 (관리자)", description = "사용자 생성 API")
     public ResponseEntity<Map<String, Object>> signup(@RequestBody SignupDTO signupDto) {
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -73,7 +73,7 @@ public class UserController {
     // 사용자 정보 수정 – 본인 또는 ADMIN 접근 가능
     @PutMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal")
-    @Operation(summary = "사용자 수정", description = "사용자 정보 수정하는 API (관리자 및 본인만 가능)")
+    @Operation(summary = "사용자 수정 (관리자 or 본인)", description = "사용자 정보 수정하는 API")
     public ResponseEntity<Map<String, Object>> updateUser(@PathVariable String userId,
                                                           @RequestBody UserUpdateDTO updateUserDto) {
         Map<String, Object> resultMap = new HashMap<>();
@@ -88,7 +88,7 @@ public class UserController {
     // 사용자 비밀번호 변경 – 본인 또는 ADMIN 접근 가능
     @PutMapping("/{userId}/password")
     @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal")
-    @Operation(summary = "비밀번호 수정", description = "비밀번호 수정하는 API (관리자 및 본인만 가능)")
+    @Operation(summary = "비밀번호 수정 (관리자 or 본인)", description = "비밀번호 수정하는 API")
     public ResponseEntity<Map<String, Object>> updateUserPassword(@PathVariable String userId,
                                                           @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
         Map<String, Object> resultMap = new HashMap<>();
@@ -105,7 +105,7 @@ public class UserController {
     // 사용자 삭제 – ADMIN 전용
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "사용자 삭제", description = "사용자ID로 사용자 삭제하는 API (관리자만 가능)")
+    @Operation(summary = "사용자 삭제 (관리자)", description = "사용자ID로 사용자 삭제하는 API")
     public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable String userId) {
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -120,7 +120,7 @@ public class UserController {
     // 단건 사용자 조회 – 본인 또는 ADMIN 접근 가능
     @GetMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal")
-    @Operation(summary = "사용자 정보 조회", description = "사용자 정보 조회하는 API (관리자 및 본인만 가능)")
+    @Operation(summary = "사용자 정보 조회 (관리자 or 본인)", description = "사용자 정보 조회하는 API")
     public ResponseEntity<Map<String, Object>> getUser(@PathVariable String userId) {
         Map<String, Object> resultMap = new HashMap<>();
 
@@ -134,7 +134,7 @@ public class UserController {
     // 전체 사용자 조회 – ADMIN 전용
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "사용자 리스트 조회", description = "모든 사용자를 조회하는 API (관리자만 가능)")
+    @Operation(summary = "사용자 리스트 조회 (관리자)", description = "모든 사용자를 조회하는 API")
     public ResponseEntity<Map<String, Object>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "18") int size,
@@ -152,7 +152,7 @@ public class UserController {
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "사용자 검색", description = "사용자 이름으로 검색하는 API (관리자만 가능)")
+    @Operation(summary = "사용자 검색 (관리자)", description = "사용자 이름으로 검색하는 API")
     public ResponseEntity<Map<String, Object>> searchUsers(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,

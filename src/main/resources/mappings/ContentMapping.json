@@ -203,6 +203,7 @@
           "tokenizer": "my_whitespace"
         },
         "standard_analyzer": {
+          "type": "custom",
           "filter": [
             "lowercase",
             "trim"

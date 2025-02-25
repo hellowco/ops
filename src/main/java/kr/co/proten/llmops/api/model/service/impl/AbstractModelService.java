@@ -2,10 +2,9 @@ package kr.co.proten.llmops.api.model.service.impl;
 
 import kr.co.proten.llmops.api.model.dto.request.ModelRequest;
 import kr.co.proten.llmops.api.model.dto.response.ChatResponse;
-import kr.co.proten.llmops.api.model.service.ChatService;
+import kr.co.proten.llmops.api.model.service.ModelService;
 import kr.co.proten.llmops.core.exception.ChatProcessingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.metadata.EmptyUsage;
@@ -22,10 +21,9 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
+public abstract class AbstractModelService implements ModelService {
 
-public abstract class AbstractChatService implements ChatService {
-
-    private static final Logger log = LoggerFactory.getLogger(AbstractChatService.class);
     private static final Duration TIMEOUT_DURATION = Duration.ofSeconds(10);
     private final AtomicReference<Usage> lastUsage = new AtomicReference<>(new EmptyUsage());
 
@@ -56,8 +54,7 @@ public abstract class AbstractChatService implements ChatService {
                             // Retrieve tokenLimit
                             Usage usage = response.getMetadata().getUsage();
                             if (usage != null && !(usage instanceof EmptyUsage)) {
-                                lastUsage.set(usage); // 🔹 마지막 usage 값 저장
-//                                log.info("✅ Updated lastUsage: {}", usage);
+                                lastUsage.set(usage);
                             } else {
                                 log.warn("⚠️ Token usage data is missing or EmptyUsage.");
                             }

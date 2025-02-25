@@ -34,6 +34,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
+    @ExceptionHandler(IndexCreationException.class)
+    public ResponseEntity<Object> handleIndexCreationException(IndexCreationException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(IndexDeleteException.class)
+    public ResponseEntity<Object> handleIndexDeleteException(IndexDeleteException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());

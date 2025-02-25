@@ -14,6 +14,7 @@ public class UserDTO {
     private String email;
     private String department;
     private String jobTitle;
+    private String role;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;

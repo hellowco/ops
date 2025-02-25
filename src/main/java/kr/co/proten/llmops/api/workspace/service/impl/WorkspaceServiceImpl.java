@@ -103,7 +103,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .orElseThrow(() -> new ResourceNotFoundException("해당 ID의 워크스페이스를 찾을 수 없습니다."));
 
         WorkspaceResponseDTO workspaceResponseDTO = workspaceMapper.entityToResponse(workspace);
-        log.info("getWorkspaceById: {}", workspaceResponseDTO.toString());
 
         List<UserWorkspace> userWorkspaceList = userWorkspaceRepository.findUserByWorkspaceId(id);
 
@@ -114,11 +113,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                         .email(uw.getUser().getEmail())
                         .role(uw.getRole())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         workspaceResponseDTO.setUsers(userDTOList);
-
-        log.info("getWorkspaceById: {}", workspaceResponseDTO);
 
         resultMap.put("status", SUCCESS);
         resultMap.put("msg", "워크스페이스 반환 성공!");
@@ -193,6 +190,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         log.info("patchOperations: {}", patchOperations);
         Workspace updatedWorkspace = applyCustomPatchToResource(patchOperations, workspace);
 
+        log.info("updateWorkspace: {}", updatedWorkspace);
         workspaceRepository.save(updatedWorkspace);
 
         resultMap.put("status", SUCCESS);
@@ -333,7 +331,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             String userId = parts[1];
             // Only 'role' property is supported for replacement on users
             if (parts.length >= 3 && "role".equalsIgnoreCase(parts[2])) {
-                log.info("Replacing role for user with id: {} with value: {}", userId, operation.value());
+
+                log.info("Replacing role for user with id: {} with value: {}", userId, operation.value().asText());
 
                 User user = userRepository.findByUserId(userId)
                         .orElseThrow(() -> new ResourceNotFoundException("해당 ID의 사용자를 찾을 수 없습니다. ID: " + userId));
@@ -341,9 +340,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 UserWorkspace userWorkspace = userWorkspaceRepository.findByUserAndWorkspace(user, workspace)
                         .orElseThrow(() -> new ResourceNotFoundException("해당 ID의 사용자를 워크스페이스에서 찾을 수 없습니다. ID: " + userId));
 
-                String role = operation.value().toString().toUpperCase();
-                if (role.equals("OWNER") || role.equals("MEMBER")) {
+                String role = operation.value().asText().toUpperCase();
+
+                if (role.equalsIgnoreCase("OWNER") || role.equalsIgnoreCase("MEMBER")) {
                     userWorkspace.setRole(role);
+                    userWorkspaceRepository.save(userWorkspace);
                 } else {
                     log.warn("Ignoring replace op on invalid role: {}", role);
                 }
@@ -352,8 +353,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             }
         } else {
             // Handle non-user properties replacement
-            log.info("Replacing non-user property at path: {} with value: {}", path, operation.value());
-            String value = operation.value().toString();
+            log.info("Replacing non-user property at path: {} with value: {}", path, operation.value().asText());
+            String value = operation.value().asText();
             if (path.startsWith("/description")) {
                 workspace.setDescription(value);
             } else if (path.startsWith("/isActive")) {

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.proten.llmops.api.document.dto.DocumentDTO;
 import kr.co.proten.llmops.api.model.dto.request.ModelRequest;
-import kr.co.proten.llmops.api.model.service.ChatService;
-import kr.co.proten.llmops.api.model.service.factory.ChatFactory;
+import kr.co.proten.llmops.api.model.service.ModelService;
+import kr.co.proten.llmops.api.model.service.factory.ProviderFactory;
 import kr.co.proten.llmops.api.node.dto.Node;
 import kr.co.proten.llmops.api.node.dto.NodeResponse;
 import kr.co.proten.llmops.api.search.dto.SearchRequestDTO;
@@ -13,6 +13,7 @@ import kr.co.proten.llmops.api.search.service.SearchService;
 import kr.co.proten.llmops.api.workflow.dto.FlowNode;
 import kr.co.proten.llmops.api.workflow.helper.ExecutionContext;
 import kr.co.proten.llmops.core.exception.NodeExecutionException;
+import kr.co.proten.llmops.core.exception.UnsupportedModelException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @Service
 public class NodeExecutionService {
 
-    private final ChatFactory chatFactory;
+    private final ProviderFactory providerFactory;
     private final SearchService searchService;
     private final ObjectMapper mapper;
 
@@ -193,10 +194,10 @@ public class NodeExecutionService {
                 .documents(stringResults)
                 .build();
 
-        ChatService chatService = chatFactory.getChatService(modelRequest.provider())
-                .orElseThrow(() -> new UnsupportedOperationException("Provider not supported"));
+        ModelService modelService = providerFactory.getProvider(modelRequest.provider())
+                .orElseThrow(() -> new UnsupportedModelException("Provider is not supported."));
 
-        return chatService.processChat(modelRequest)
+        return modelService.processChat(modelRequest)
                 .map(chatResponse -> {
                     Map<String, Object> output = new HashMap<>();
                     output.put("text", chatResponse.content());

@@ -4,9 +4,11 @@ import kr.co.proten.llmops.api.knowledge.dto.KnowledgeDTO;
 import kr.co.proten.llmops.api.knowledge.entity.Knowledge;
 import kr.co.proten.llmops.api.knowledge.repository.OpenSearchKnowledgeRepository;
 import kr.co.proten.llmops.api.knowledge.service.KnowledgeService;
+import kr.co.proten.llmops.core.exception.IndexCreationException;
+import kr.co.proten.llmops.core.exception.IndexDeleteException;
 import kr.co.proten.llmops.core.helpers.UUIDGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -14,13 +16,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static kr.co.proten.llmops.core.helpers.MappingLoader.loadMappingFromResources;
-
+@Slf4j
 @Service
 public class KnowledgeServiceImpl implements KnowledgeService {
 
     public static final String KNOWLEDGE_METADATA = "knowledge_metadata";
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    @Value("${opensearch.index.prefix}")
+    String osPrefix;
 
     private final OpenSearchKnowledgeRepository openSearchKnowledgeRepository;
 
@@ -29,35 +32,29 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     }
 
     @Override
-    public boolean createIndexWithMapping(String indexName) throws IOException {
-        Map<String, Object> contentMapping = loadMappingFromResources("mappings/ContentMapping.json");
-        Map<String, Object> metadataMapping = loadMappingFromResources("mappings/MetadataMapping.json");
+    public String createIndex(String indexName, int dimension) {
+        //특수문자 제거
+        indexName = indexName.replaceAll("[^a-zA-Z0-9]", "_");
 
-        // 메타데이터 인덱스 이름 생성
-        final String metaIndexName = indexName + "_metadata";
+        final String newIndexName = osPrefix + indexName + "_" + dimension;
 
-        try {
-            openSearchKnowledgeRepository.createIndex(indexName, contentMapping);
-            openSearchKnowledgeRepository.createIndex(metaIndexName, metadataMapping);
-        } catch (Exception e) {
-            openSearchKnowledgeRepository.deleteIndex(indexName);
-            openSearchKnowledgeRepository.deleteIndex(metaIndexName);
-            throw new IOException("Error while creating index", e);
+        if(openSearchKnowledgeRepository.createIndex(newIndexName, dimension)){
+            return newIndexName;
+        } else {
+            throw new IndexCreationException("Index creation failed.");
         }
-
-        return true;
     }
 
     @Override
-    public boolean deleteIndex(String indexName) throws IOException {
+    public boolean deleteIndex(String indexName) {
         // 메타데이터 인덱스 이름 생성
-        final String metaIndexName = indexName + "_metadata";
+//        final String metaIndexName = indexName + "_metadata";
 
         try {
             openSearchKnowledgeRepository.deleteIndex(indexName);
-            openSearchKnowledgeRepository.deleteIndex(metaIndexName);
+//            openSearchKnowledgeRepository.deleteIndex(metaIndexName);
         } catch (Exception e) {
-            throw new IOException("Error while deleting index", e);
+            throw new IndexDeleteException("Error while deleting index");
         }
 
         return true;
@@ -89,8 +86,6 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     public Map<String, Object> createKnowledge(String modelName,String knowledgeName,String description) {
         Map<String, Object> result = new HashMap<>();
 
-        //TODO:: modelName에 해당하는 인덱스가 오픈서치에 없으면 생성해야함.
-        // 현재 인덱스 mapping되는데 settings가 안되어서 구현 추후로 미룸
         Knowledge entity = Knowledge.builder()
                 .id(UUIDGenerator.generateUUID())
                 .modelName(modelName)
@@ -160,15 +155,6 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .modelName(entity.getModelName())
                 .knowledgeName(entity.getKnowledgeName())
                 .description(entity.getDescription())
-                .build();
-    }
-
-    private Knowledge toEntity(KnowledgeDTO dto) {
-        return Knowledge.builder()
-                .id(dto.id())
-                .modelName(dto.modelName())
-                .knowledgeName(dto.knowledgeName())
-                .description(dto.description())
                 .build();
     }
 }

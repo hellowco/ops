@@ -1,5 +1,6 @@
 package kr.co.proten.llmops.core.config.ai;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaOptions;
@@ -9,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 import io.micrometer.observation.ObservationRegistry;
 
+import java.util.List;
+
+@Slf4j
 @Configuration
 public class OllamaConfig {
 
@@ -44,7 +48,7 @@ public class OllamaConfig {
         Assert.isTrue(port > 0 && port <= 65535, "port must be between 1 and 65535");
 
         try {
-            String url = String.format("http://%s:%d", host, port);
+            String url = String.format("%s:%d", host, port);
             return new OllamaApi(url);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to create OllamaApi client. Host: " + host + ", Port: " + port, e);
@@ -54,8 +58,7 @@ public class OllamaConfig {
     /**
      * 동적 OllamaChatModel을 생성하는 메서드
      */
-    public OllamaChatModel createChatModel(String host, int port, String model) {
-        OllamaApi api = createClient(host, port);
+    public OllamaChatModel createChatModel(OllamaApi api, String model) {
         return OllamaChatModel.builder()
                 .ollamaApi(api)
                 .defaultOptions(
@@ -66,5 +69,20 @@ public class OllamaConfig {
                 .observationRegistry(ollamaObservationRegistry())
                 .modelManagementOptions(ModelManagementOptions.defaults())
                 .build();
+    }
+
+    public List<String> getModelList(OllamaApi api) {
+        OllamaApi.ListModelResponse listModelResponse = api.listModels();
+
+        return listModelResponse.models().stream().map(OllamaApi.Model::name).toList();
+    }
+
+    public int getEmbedDimension(OllamaApi api, String model) {
+
+        OllamaApi.EmbeddingsRequest request = new OllamaApi.EmbeddingsRequest(model, "hi");
+
+        OllamaApi.EmbeddingsResponse embeddingsResponse = api.embed(request);
+
+        return embeddingsResponse.embeddings().get(0).length;
     }
 }

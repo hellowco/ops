@@ -45,7 +45,7 @@ public class ProsLLMEmbeddingProcessor implements EmbeddingProcessor {
      *
      * @return bertVector: 임베딩한 벡터값을 List<Double>로 리턴
      */
-    public List<Double> getBertVector(String model, String content) {
+    private List<Double> getBertVector(String model, String content) {
         List<Double> bertVector = null;
 
         try {
