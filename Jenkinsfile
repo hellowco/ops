@@ -1,8 +1,5 @@
 pipeline {
     agent any
-    parameters {
-        choice(name: 'DEPLOY_ENV', choices: ['prod', 'dev'], description: '배포 환경 선택 (prod 또는 dev)')
-    }
     tools {
         gradle 'gradle 8.11.1'
     }
@@ -15,10 +12,19 @@ pipeline {
         stage('Set Environment Settings') {
             steps {
                 script {
-                    // 선택한 환경에 따라 스크립트 경로를 동적으로 설정
-                    def scriptPath = (params.DEPLOY_ENV == 'prod') ? '/var/jenkins_home/custom/llmops-api-main' : '/var/jenkins_home/custom/llmops-api-dev'
-                    echo "${params.DEPLOY_ENV} 환경 선택됨. 스크립트 경로: ${scriptPath}"
-                    // env에 저장하면 이후 단계에서도 사용 가능
+                    if (env.BRANCH_NAME == 'main') {
+                        env.DEPLOY_ENV = 'prod'
+                    } else {
+                        env.DEPLOY_ENV = 'dev'
+                    }
+
+                   def scriptPath = (env.DEPLOY_ENV == 'prod') 
+                        ? '/var/jenkins_home/custom/llmops-api-main' 
+                        : '/var/jenkins_home/custom/llmops-api-dev'
+                    
+                    echo "브랜치: ${env.BRANCH_NAME}, 최종 DEPLOY_ENV: ${env.DEPLOY_ENV}"
+                    echo "SCRIPT_PATH: ${scriptPath}"
+                    
                     env.SCRIPT_PATH = scriptPath
                 }
             }
@@ -51,7 +57,7 @@ pipeline {
                     def deployDir = env.SCRIPT_PATH
                     sh "mkdir -p ${deployDir}"
                     
-                    if (params.DEPLOY_ENV == 'prod') {
+                    if (env.DEPLOY_ENV == 'prod') {
                         echo "Deploying production build"
                         sh """
                             cp ./deploy/prod/Dockerfile ${deployDir}
@@ -61,7 +67,7 @@ pipeline {
                             chmod +x ${deployDir}/rebuild_and_run.sh
                             ${deployDir}/rebuild_and_run.sh
                         """
-                    } else if (params.DEPLOY_ENV == 'dev') {
+                    } else if (env.DEPLOY_ENV == 'dev') {
                         echo "Deploying development build"
                         sh """
                             cp ./deploy/dev/Dockerfile ${deployDir}
