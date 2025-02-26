@@ -71,7 +71,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
             List<UserWorkspace> userWorkspaceList = workspaceDTO.users().stream()
                     .map(userInfo -> {
-                        // userInfo.userId()로 실제 User 엔티티 조회
                         User user = userRepository.findById(userInfo.userId())
                                 .orElseThrow(() -> new ResourceNotFoundException("해당 ID의 사용자를 찾을 수 없습니다. ID: " + userInfo.userId()));
                         return UserWorkspace.builder()
@@ -86,7 +85,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
             resultMap.put("status", SUCCESS);
             resultMap.put("msg", "회원가입 성공!");
-            resultMap.put("response", getWorkspaceById(savedWS.getWorkspaceId()));
+            resultMap.put("response", getWorkspace(savedWS));
 
             return resultMap;
         } catch (Exception e) {
@@ -102,9 +101,19 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         Workspace workspace = workspaceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 ID의 워크스페이스를 찾을 수 없습니다."));
 
+        WorkspaceResponseDTO workspaceResponseDTO = getWorkspace(workspace);
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", "워크스페이스 반환 성공!");
+        resultMap.put("response", workspaceResponseDTO);
+
+        return resultMap;
+    }
+
+    private WorkspaceResponseDTO getWorkspace(Workspace workspace) {
         WorkspaceResponseDTO workspaceResponseDTO = workspaceMapper.entityToResponse(workspace);
 
-        List<UserWorkspace> userWorkspaceList = userWorkspaceRepository.findUserByWorkspaceId(id);
+        List<UserWorkspace> userWorkspaceList = userWorkspaceRepository.findUserByWorkspaceId(workspace.getWorkspaceId());
 
         List<UserRoleDTO> userDTOList = userWorkspaceList.stream()
                 .map(uw -> UserRoleDTO.builder()
@@ -116,12 +125,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
                 .toList();
 
         workspaceResponseDTO.setUsers(userDTOList);
-
-        resultMap.put("status", SUCCESS);
-        resultMap.put("msg", "워크스페이스 반환 성공!");
-        resultMap.put("response", workspaceResponseDTO);
-
-        return resultMap;
+        return workspaceResponseDTO;
     }
 
     @Override
@@ -195,7 +199,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
         resultMap.put("status", SUCCESS);
         resultMap.put("msg", "워크스페이스 수정 성공!");
-        resultMap.put("response", getWorkspaceById(id));
+        resultMap.put("response", getWorkspace(updatedWorkspace));
 
         return resultMap;
     }
