@@ -16,7 +16,7 @@ import java.util.List;
 
 import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 
-@ToString
+@ToString(exclude = {"apps", "userWorkspaces"})
 @Entity
 @Getter
 @Builder

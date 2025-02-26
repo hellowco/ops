@@ -5,19 +5,22 @@ import jakarta.validation.constraints.NotNull;
 import kr.co.proten.llmops.api.workflow.entity.Workflow;
 import kr.co.proten.llmops.api.workspace.entity.Workspace;
 import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-import static kr.co.proten.llmops.core.helpers.DateUtil.generateCurrentTimestamp;
 import static kr.co.proten.llmops.core.helpers.UUIDGenerator.generateUUID;
 
 @Entity
 @Table(name = "apps")
 @Builder
-@ToString
+@ToString(exclude = {"workspace", "workflow"})
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class AppEntity {
 
     @Id
@@ -42,8 +45,10 @@ public class AppEntity {
 
     @NotNull
     @Column(nullable = false, updatable = false)
+    @CreatedDate
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
     @Setter
@@ -56,12 +61,6 @@ public class AppEntity {
         if (this.appId == null) {
             this.appId = generateUUID();
         }
-        this.createdAt = generateCurrentTimestamp();
         this.isActive = true;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = generateCurrentTimestamp(); // 수정 시마다 업데이트 시간 설정
     }
 }

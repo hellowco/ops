@@ -194,7 +194,7 @@ public class NodeExecutionService {
                 .documents(stringResults)
                 .build();
 
-        ModelService modelService = providerFactory.getProvider(modelRequest.provider())
+        ModelService modelService = providerFactory.getProvider(modelRequest.provider().toUpperCase())
                 .orElseThrow(() -> new UnsupportedModelException("Provider is not supported."));
 
         return modelService.processChat(modelRequest)
