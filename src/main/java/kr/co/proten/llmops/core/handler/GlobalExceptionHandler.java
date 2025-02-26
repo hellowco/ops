@@ -19,6 +19,11 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice(basePackages = "kr.co.proten.llmops.api")
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(FailedModelConnectionException.class)
+    public ResponseEntity<Object> handleFailedModelConnectionException(FailedModelConnectionException ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
     @ExceptionHandler(WorkspaceAlreadyExistException.class)
     public ResponseEntity<Object> handleWorkspaceAlreadyExistException(WorkspaceAlreadyExistException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());

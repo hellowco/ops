@@ -13,6 +13,7 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -69,19 +70,37 @@ public class OpenAiModelServiceImpl extends AbstractModelService {
 
     @Override
     public int getEmbeddingDimensions(String name) {
+        List<Double> embedding = getEmbedding(name, "hi");
+
+        int dimension = embedding.size();
+
+        log.info("Ollama embedding dimension: {}", dimension);
+
+        return dimension;
+    }
+
+    @Override
+    public List<Double> getEmbedding(String modelName, String text) {
         Provider provider = providerRepository.findByName(getProviderType())
                 .orElseThrow(() -> new InvalidInputException("Provider not found"));
 
         apiKey = provider.getApiKey() == null ? apiKey : provider.getApiKey();
 
-        int dimension;
-//        try {
-            dimension = openAiConfig.getEmbedDimension(openAiConfig.createClient(apiKey), name);
-//        } catch (Exception e) {
-//            throw new InvalidInputException("Could not get embedding dimension from config");
-//        }
-        log.info("Ollama dimension: {}", dimension);
+        try {
+            float[] floatEmbeddings = openAiConfig.getEmbed(openAiConfig.createClient(apiKey), modelName, "hi");
 
-        return dimension;
+            if (floatEmbeddings == null || floatEmbeddings.length == 0) {
+                throw new InvalidInputException("Embedding response is empty for model: " + modelName);
+            }
+
+            List<Double> embedding = new ArrayList<>(floatEmbeddings.length);
+            for (float value : floatEmbeddings) {
+                embedding.add((double) value);
+            }
+
+            return embedding;
+        } catch (Exception e) {
+            throw new InvalidInputException("Could not get embedding from " + modelName);
+        }
     }
 }

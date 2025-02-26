@@ -11,5 +11,6 @@ public interface ModelService {
     Flux<ChatResponse> processChat(ModelRequest request);
     List<String> getEmbedModelList(ModelListRequest modelListRequest);
     List<String> getSearchModelList(ModelListRequest modelListRequest);
-    int getEmbeddingDimensions(String name);
+    int getEmbeddingDimensions(String modelName);
+    List<Double> getEmbedding(String modelName, String text);
 }

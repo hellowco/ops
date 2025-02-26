@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Slf4j
 public class MappingLoader {
-    public static Map<String, Object> loadMappingFromResources(String resourcePath) throws IOException {
+    /*public static Map<String, Object> loadMappingFromResources(String resourcePath) throws IOException {
         Map<String, Object> result = new HashMap<>();
 
         // ClassLoader를 사용하여 resources 폴더에서 파일 읽기
@@ -45,9 +45,9 @@ public class MappingLoader {
             throw new RuntimeException(e);
         }
         return result;
-    }
+    }*/
 
-    public static Map<String, Property> convertToProperties(Map<String, Object> rawMapping) {
+    /*public static Map<String, Property> convertToProperties(Map<String, Object> rawMapping) {
         Map<String, Property> properties = new HashMap<>();
 
         rawMapping.forEach((key, value) -> {
@@ -102,10 +102,9 @@ public class MappingLoader {
         });
 
         return properties;
-    }
+    }*/
 
-    /*
-    public static IndexSettings convertToIndexSettings(Map<String, Object> settingsMap) {
+    /*public static IndexSettings convertToIndexSettings(Map<String, Object> settingsMap) {
         return new IndexSettings.Builder()
                 .numberOfShards("5")
                 .numberOfReplicas("1")
@@ -142,8 +141,7 @@ public class MappingLoader {
 //                .blocks(b -> b.readOnlyAllowDelete(null)) // blocks 값
                 .build();
 
-    }
-    */
+    }*/
 
     public static Map<String, Object> convertToMap(Object obj) {
         ObjectMapper objectMapper = new ObjectMapper();

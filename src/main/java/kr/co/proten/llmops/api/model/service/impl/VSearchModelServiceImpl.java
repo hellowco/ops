@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.proten.llmops.api.model.dto.request.ModelListRequest;
 import kr.co.proten.llmops.api.model.dto.request.ModelRequest;
+import kr.co.proten.llmops.core.exception.FailedModelConnectionException;
 import kr.co.proten.llmops.core.exception.InvalidInputException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class VSearchModelServiceImpl extends AbstractModelService {
     public List<String> getEmbedModelList(ModelListRequest request) {
         List<String> embedModelList;
         try {
-            // GET 요청 수행, 응답을 JsonNode 형태로 받음 (Jackson 라이브러리 필요)
+            // GET 요청 수행, 응답을 JsonNode 형태로 받음
             ResponseEntity<JsonNode> response = restTemplate.getForEntity(embeddingListUrl, JsonNode.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
@@ -88,12 +89,24 @@ public class VSearchModelServiceImpl extends AbstractModelService {
     public int getEmbeddingDimensions(String name) {
         log.info("name of model: {}", name);
 
-        int dimension;
-        try {
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", name);
-            requestBody.put("query", "hi"); // test query
+        int dimension = getEmeddings(name, "hi").size();
 
+        log.info("VSearch dimension: {}", dimension);
+
+        return dimension;
+    }
+
+    @Override
+    public List<Double> getEmbedding(String modelName, String plainText) {
+        return getEmeddings(modelName, plainText);
+    }
+
+    private List<Double> getEmeddings (String modelName, String query) {
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("model", modelName);
+        requestBody.put("query", query); // test query
+
+        try {
             // HTTP 요청 헤더 설정
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -105,10 +118,7 @@ public class VSearchModelServiceImpl extends AbstractModelService {
             // POST 요청 보내기
             ResponseEntity<JsonNode> response = restTemplate.postForEntity(embeddingUrl, requestEntity, JsonNode.class);
 
-            log.info("vsearch request: {}", requestBody);
-            log.info("vsearch request: {}", requestEntity);
-            log.info("VSearch embedding dimensions: {}", response.getStatusCode());
-            log.info("VSearch embedding dimensions: {}", response.getBody());
+            List<Double> embeddings = new ArrayList<>();
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 // 응답 본문 파싱
@@ -118,18 +128,20 @@ public class VSearchModelServiceImpl extends AbstractModelService {
                 JsonNode embeddingArray = root.path("result").path("embedding");
 
                 if (embeddingArray.isArray()) {
-                    dimension = embeddingArray.size();
+                    for (JsonNode node : embeddingArray) {
+                        embeddings.add(node.asDouble());
+                    }
                 } else {
                     throw new InvalidInputException("Invalid response format: 'embedding' is not an array");
                 }
             } else {
-                throw new InvalidInputException("Failed to retrieve embedding, status code: " + response.getStatusCode());
+                throw new FailedModelConnectionException("Could not get response from {}" + embeddingUrl);
             }
-        } catch (Exception e) {
-            throw new InvalidInputException("Could not get embedding dimension from config");
-        }
 
-        log.info("VSearch dimension: {}", dimension);
-        return dimension;
+            return embeddings;
+        } catch (Exception e) {
+            throw new InvalidInputException("Could not get embedding from {}" + modelName);
+        }
     }
+
 }

@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
+import java.util.List;
+
 @Slf4j
 @Configuration
 public class OpenAiConfig {
@@ -65,21 +67,36 @@ public class OpenAiConfig {
         return new OpenAiChatModel(api, defaultOptions);
     }
 
-    public int getEmbedDimension(OpenAiApi api, String model) {
-        // 임베딩 요청을 생성합니다.
-        EmbeddingRequest<String> embeddingRequest = new EmbeddingRequest<>("hi", model);
-
-        // 응답에서 임베딩 리스트를 추출합니다.
-        EmbeddingList<Embedding> embeddingList = api.embeddings(embeddingRequest).getBody();
-        log.info("openai embed res body: {}", embeddingList);
-
-        if (embeddingList != null && !embeddingList.data().isEmpty()) {
-            // 첫 번째 임베딩을 가져옵니다.
-            Embedding embedding = embeddingList.data().get(0);
-
-            return embedding.embedding().length;
-        } else {
-            throw new InvalidInputException("No embedding found");
+    public float[] getEmbed(OpenAiApi api, String model, String text) {
+        if (api == null) {
+            throw new IllegalArgumentException("OpenAiApi must not be null");
         }
+        if (model == null || model.isEmpty()) {
+            throw new IllegalArgumentException("Model must not be null or empty");
+        }
+        if (text == null) {
+            throw new IllegalArgumentException("Text must not be null");
+        }
+
+        EmbeddingRequest<String> embeddingRequest = new EmbeddingRequest<>(text, model);
+
+        EmbeddingList<Embedding> embeddingList = api.embeddings(embeddingRequest).getBody();
+
+        if (embeddingList == null) {
+            throw new InvalidInputException("EmbeddingList is null for model: " + model);
+        }
+        List<Embedding> data = embeddingList.data();
+        if (data == null || data.isEmpty()) {
+            throw new InvalidInputException("No embedding found for model: " + model);
+        }
+
+        Embedding embedding = data.get(0);
+        float[] embeddingArray = embedding.embedding();
+        if (embeddingArray == null || embeddingArray.length == 0) {
+            throw new InvalidInputException("Embedding array is empty for model: " + model);
+        }
+
+        return embeddingArray;
     }
+
 }

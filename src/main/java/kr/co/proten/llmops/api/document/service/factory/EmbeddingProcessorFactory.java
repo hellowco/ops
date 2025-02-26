@@ -12,8 +12,8 @@ import java.util.Optional;
 public class EmbeddingProcessorFactory {
     private final Map<String, EmbeddingProcessor> chunkServiceMap = new HashMap<>();
 
-    public EmbeddingProcessorFactory(List<EmbeddingProcessor> EmbeddingProcessor) {
-        EmbeddingProcessor.forEach(s -> chunkServiceMap.put(s.getServiceType(), s));
+    public EmbeddingProcessorFactory(List<EmbeddingProcessor> embeddingProcessors) {
+        embeddingProcessors.forEach(s -> chunkServiceMap.put(s.getServiceType(), s));
     }
 
     public Optional<EmbeddingProcessor> getEmbeddingService(String embedType) {

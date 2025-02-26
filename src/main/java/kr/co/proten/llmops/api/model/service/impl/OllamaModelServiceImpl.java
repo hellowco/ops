@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -65,15 +66,35 @@ public class OllamaModelServiceImpl extends AbstractModelService {
 
     @Override
     public int getEmbeddingDimensions(String name) {
+        List<Double> embedding = getEmbedding(name, "hi");
+
+        int dimension = embedding.size();
+
+        log.info("Ollama embedding dimension: {}", dimension);
+
+        return dimension;
+    }
+
+    @Override
+    public List<Double> getEmbedding(String modelName, String text) {
         String baseUrl = getProvider().getBaseURL();
         OllamaApi api = createOllamaApi(baseUrl);
 
         try {
-            int dimension = ollamaConfig.getEmbedDimension(api, name);
-            log.info("Ollama dimension: {}", dimension);
-            return dimension;
+            float[] floatEmbeddings = ollamaConfig.getEmbed(api, modelName, text);
+
+            if (floatEmbeddings == null || floatEmbeddings.length == 0) {
+                throw new InvalidInputException("Embedding response is empty for model: " + modelName);
+            }
+
+            List<Double> embedding = new ArrayList<>(floatEmbeddings.length);
+            for (float value : floatEmbeddings) {
+                embedding.add((double) value);
+            }
+
+            return embedding;
         } catch (Exception e) {
-            throw new InvalidInputException("Could not get embedding dimensions from config");
+            throw new InvalidInputException("Could not get embedding from " + modelName);
         }
     }
 

@@ -3,6 +3,8 @@ package kr.co.proten.llmops.core.config.ai;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.api.OllamaApi.EmbeddingsRequest;
+import org.springframework.ai.ollama.api.OllamaApi.EmbeddingsResponse;
 import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.context.annotation.Bean;
@@ -77,12 +79,29 @@ public class OllamaConfig {
         return listModelResponse.models().stream().map(OllamaApi.Model::name).toList();
     }
 
-    public int getEmbedDimension(OllamaApi api, String model) {
+    public float[] getEmbed(OllamaApi api, String model, String text) {
+        if (api == null) {
+            throw new IllegalArgumentException("OllamaApi must not be null");
+        }
+        if (model == null || model.isEmpty()) {
+            throw new IllegalArgumentException("Model must not be null or empty");
+        }
+        if (text == null) {
+            throw new IllegalArgumentException("Text must not be null");
+        }
 
-        OllamaApi.EmbeddingsRequest request = new OllamaApi.EmbeddingsRequest(model, "hi");
+        EmbeddingsRequest request = new EmbeddingsRequest(model, text);
 
-        OllamaApi.EmbeddingsResponse embeddingsResponse = api.embed(request);
+        EmbeddingsResponse embeddingsResponse = api.embed(request);
 
-        return embeddingsResponse.embeddings().get(0).length;
+        assert embeddingsResponse != null : "EmbeddingsResponse is null";
+
+        List<float[]> embeddingsList = embeddingsResponse.embeddings();
+        assert embeddingsList != null && !embeddingsList.isEmpty() : "No embeddings found in response";
+
+        float[] embedding = embeddingsList.get(0);
+        assert embedding != null : "First embedding is null";
+
+        return embedding;
     }
 }

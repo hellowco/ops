@@ -27,6 +27,8 @@ public abstract class AbstractModelService implements ModelService {
     private static final Duration TIMEOUT_DURATION = Duration.ofSeconds(10);
     private final AtomicReference<Usage> lastUsage = new AtomicReference<>(new EmptyUsage());
 
+    protected abstract ChatModel createChatModel(ModelRequest request);
+
     @Override
     public Flux<ChatResponse> processChat(ModelRequest request) {
 
@@ -86,8 +88,6 @@ public abstract class AbstractModelService implements ModelService {
             }
         });
     }
-
-    protected abstract ChatModel createChatModel(ModelRequest request);
 
     private Prompt createPrompt(ModelRequest request) {
         List<Message> userMessage = List.of(
