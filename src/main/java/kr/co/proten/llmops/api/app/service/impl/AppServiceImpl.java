@@ -81,7 +81,7 @@ public class AppServiceImpl implements AppService {
     @Transactional(readOnly = true)
     public List<AppResponseDTO> getAppByName(AppSearchDTO appSearchDTO) {
         try {
-            validateWorkspace(appSearchDTO.workspace_id());
+            Workspace workspace = validateWorkspace(appSearchDTO.workspace_id());
 
             String sortBy = appSearchDTO.sort_by().toUpperCase();
             int page = appSearchDTO.page() < 1 ? 0 : appSearchDTO.page() - 1;
@@ -90,7 +90,7 @@ public class AppServiceImpl implements AppService {
                     ? PageRequest.of(page, appSearchDTO.size(), Sort.by(Sort.Order.asc(appSearchDTO.sort_field())))
                     : PageRequest.of(page, appSearchDTO.size(), Sort.by(Sort.Order.desc(appSearchDTO.sort_field())));
 
-            return appRepository.findByNameContaining(appSearchDTO.name(), pageable).stream()
+            return appRepository.findByNameContainingAndWorkspace(appSearchDTO.name(), workspace, pageable).stream()
                     .map(appMapper::responseToDto)
                     .toList();
         } catch (Exception e) {

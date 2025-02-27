@@ -11,7 +11,7 @@ import java.util.Optional;
 
 @Repository
 public interface AppRepository extends JpaRepository<AppEntity, String> {
-    List<AppEntity> findByNameContaining(String appName, Pageable pageable);
+    List<AppEntity> findByNameContainingAndWorkspace(String appName, Workspace workspace, Pageable pageable);
 
     List<AppEntity> findAllByWorkspace(Workspace workspace, Pageable pageable);
 

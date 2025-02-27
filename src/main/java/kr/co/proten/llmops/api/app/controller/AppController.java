@@ -77,6 +77,7 @@ public class AppController {
 
     @PostMapping("/search")
     @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appSearchDTO.workspace_id())")
+    @Operation(summary = "앱 검색", description = "워크스페이스 내 앱 검색하여 리스트 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAppByName(
             @RequestBody AppSearchDTO appSearchDTO
     ) {
