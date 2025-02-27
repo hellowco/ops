@@ -146,7 +146,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(String userId) {
         if(userId.equalsIgnoreCase("PROADMIN")){
-            throw new InvalidInputException("현재 계정은 삭제할 수 없습니다.");
+            throw new InvalidInputException("해당계정({" + userId + "})은 삭제할 수 없습니다.");
         }
 
         if (!userRepository.existsById(userId)) {
