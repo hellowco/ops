@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +32,7 @@ public class WorkflowController {
     private final WorkflowService workflowService;
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#id)")
     @Operation(summary = "하나의 워크플로우 반환", description = "워크플로우 ID로 워크플로우 객체 반환하는 API")
     public ResponseEntity<Map<String, Object>> getWorkflowById(@PathVariable String id) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
@@ -43,6 +45,7 @@ public class WorkflowController {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#workflowDto.workflow_id())")
     @Operation(summary = "워크플로우 수정", description = "워크플로우 ID로 워크플로우 수정후, 워크플로우 객체 반환하는 API")
     public ResponseEntity<Map<String, Object>> updateWorkflow (
             @RequestBody WorkflowUpdateDTO workflowDto) {

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.proten.llmops.api.app.dto.request.AppStateDTO;
 import kr.co.proten.llmops.api.knowledge.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -35,6 +36,7 @@ public class KnowledgeController {
     }*/
 
     @PostMapping("/")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "지식 추가", description = "Create Knowledge API")
     public ResponseEntity<Map<String,Object>> createKnowledge(
             @RequestParam(value = "modelName") String indexName,
@@ -59,6 +61,7 @@ public class KnowledgeController {
     }
 
     @PutMapping("/")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "지식 수정", description = "Update Knowledge API")
     public ResponseEntity<Map<String,Object>> updateKnowledge(
             @RequestParam(value = "knowledgeId") String knowledgeId,
@@ -72,6 +75,7 @@ public class KnowledgeController {
     }
 
     @DeleteMapping("/")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "지식 삭제", description = "Delete Knowledge API")
     public ResponseEntity<Map<String,Object>> deleteKnowledge(
             @RequestParam(value = "knowledgeId") String knowledgeId

@@ -9,6 +9,7 @@ import kr.co.proten.llmops.api.app.dto.request.AppUpdateDTO;
 import kr.co.proten.llmops.api.app.service.AppService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -25,6 +26,7 @@ public class AppController {
     private static final String SUCCESS = "success";
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appCreateDTO.workspace_id)")
     @Operation(summary = "앱 생성", description = "워크스페이스 ID, 앱 이름, 앱 설명 기반으로 앱 생성하는 API")
     public ResponseEntity<Map<String, Object>> createApp(
             @RequestBody AppCreateDTO appCreateDTO
@@ -39,6 +41,7 @@ public class AppController {
     }
 
     @GetMapping("/{app_id}")
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#workspaceId)")
     @Operation(summary = "하나의 앱 반환", description = "앱 ID로 앱 객체 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAppById(
             @PathVariable(value = "app_id") String appId,
@@ -54,6 +57,7 @@ public class AppController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#workspaceId)")
     @Operation(summary = "워크스페이스 내의 모든 앱 리스트", description = "워크스페이스 ID로 앱 객체 리스트 반환하는 API")
     public ResponseEntity<Map<String, Object>> getAllApps(
             @RequestParam(value = "workspace_id") String workspaceId,
@@ -72,6 +76,7 @@ public class AppController {
     }
 
     @PostMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appSearchDTO.workspace_id())")
     public ResponseEntity<Map<String, Object>> getAppByName(
             @RequestBody AppSearchDTO appSearchDTO
     ) {
@@ -85,6 +90,7 @@ public class AppController {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appUpdateDTO.app_id())")
     @Operation(summary = "앱 수정", description = "앱 ID로 앱 수정후, 앱 객체 반환하는 API")
     public ResponseEntity<Map<String, Object>> updateApp(
             @RequestBody AppUpdateDTO appUpdateDTO
@@ -99,6 +105,7 @@ public class AppController {
     }
 
     @PutMapping("/active")
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appStateDTO.app_id())")
     @Operation(summary = "앱 활성여부 변경", description = "앱 ID로 해당 앱의 활성/비활성 여부 변경")
     public ResponseEntity<Map<String, Object>> updateDocumentActiveness(
             @RequestBody AppStateDTO appStateDTO
@@ -113,6 +120,7 @@ public class AppController {
     }
 
     @DeleteMapping("/{app_id}")
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appId)")
     @Operation(summary = "앱 삭제", description = "앱 ID로 앱 삭제하는 API, 앱 ID가 없는거여도 삭제되었다고 나옴.")
     public ResponseEntity<Map<String, Object>> deleteApp(
             @PathVariable(value = "app_id") String appId
@@ -127,6 +135,7 @@ public class AppController {
     }
 
     @DeleteMapping
+    @PreAuthorize("hasRole('ADMIN') or @workspaceSecurity.isUserInWorkspace(#appIdList)")
     @Operation(summary = "앱 리스트 삭제", description = "앱 ID를 리스트로 받아서 여러 앱을 삭제하는 API, 앱 ID가 없는거여도 삭제되었다고 나옴.")
     public ResponseEntity<Map<String, Object>> deleteAppList(
             @RequestParam(value = "app_id_list") List<String> appIdList
