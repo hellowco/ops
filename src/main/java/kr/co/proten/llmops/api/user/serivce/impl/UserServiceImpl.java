@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.password.CompromisedPasswordException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -79,21 +80,21 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
-            throw new BadCredentialsException("Invalid credentials");
+            throw new CompromisedPasswordException("Invalid password");
         }
 
-        // access tokenLimit 발급 (워크스페이스 선택 전이므로 workspaceId 미포함)
+        // access token 발급 (워크스페이스 선택 전이므로 workspaceId 미포함)
         String accessToken = jwtService.generateBasicAccessToken(
                 user.getUserId(),
                 user.getUsername(),
                 user.getRole()
         );
-        // refresh tokenLimit 발급
+        // refresh token 발급
         String refreshTokenStr = jwtService.generateRefreshToken(user.getUserId());
 
-        // refresh tokenLimit 저장 또는 업데이트
+        // refresh token 저장 또는 업데이트
         RefreshToken refreshToken = refreshTokenRepository.findById(user.getUserId())
-                .orElse(new RefreshToken(user.getUserId(), refreshTokenStr));
+                .orElseGet(() -> new RefreshToken(user.getUserId(), refreshTokenStr));
         refreshToken.updateToken(refreshTokenStr);
         refreshTokenRepository.save(refreshToken);
 
@@ -108,6 +109,35 @@ public class UserServiceImpl implements UserService {
         // refresh tokenLimit 엔티티 삭제 (토큰 무효화)
         refreshTokenRepository.deleteById(userId);
     }
+
+    @Override
+    @Transactional
+    public AuthResponseDto reissueAccessToken(String refreshTokenStr) {
+        if (!jwtService.validateToken(refreshTokenStr)) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+
+        String userId = jwtService.extractUserId(refreshTokenStr);
+
+        RefreshToken storedToken = refreshTokenRepository.findById(userId)
+                .orElseThrow(() -> new BadCredentialsException("Refresh token not found"));
+
+        if (!storedToken.getToken().equals(refreshTokenStr)) {
+            throw new BadCredentialsException("Refresh token mismatch");
+        }
+
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        String newAccessToken = jwtService.generateBasicAccessToken(
+                user.getUserId(),
+                user.getUsername(),
+                user.getRole()
+        );
+
+        return new AuthResponseDto(user.getUserId(), user.getUsername(), newAccessToken, refreshTokenStr);
+    }
+
 
     @Override
     @Transactional

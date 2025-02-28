@@ -3,6 +3,7 @@ package kr.co.proten.llmops.api.auth.serivce;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import kr.co.proten.llmops.core.exception.AccessTokenExpiredException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -88,6 +89,8 @@ public class JwtService {
         try {
             extractClaims(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            throw new AccessTokenExpiredException(e.getHeader(), e.getClaims(), e.getMessage());
         } catch (JwtException e) {
             return false;
         }

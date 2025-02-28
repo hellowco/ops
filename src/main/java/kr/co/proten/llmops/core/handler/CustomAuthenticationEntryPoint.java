@@ -25,7 +25,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
         ResponseEntity<Object> errorResponse = globalExceptionHandler.buildErrorResponse(
-                HttpStatus.FORBIDDEN, "Require an Authorization");
+                HttpStatus.UNAUTHORIZED, "Require an Authorization");
 
         // 요청의 Accept 헤더를 확인
         String acceptHeader = request.getHeader("Accept");
@@ -37,7 +37,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         }
 
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse.getBody()));
     }
 }

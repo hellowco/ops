@@ -7,6 +7,7 @@ import kr.co.proten.llmops.api.user.dto.request.PasswordUpdateDTO;
 import kr.co.proten.llmops.api.user.dto.request.SignupDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserLoginDTO;
 import kr.co.proten.llmops.api.user.dto.request.UserUpdateDTO;
+import kr.co.proten.llmops.api.user.dto.response.AuthResponseDto;
 import kr.co.proten.llmops.api.user.serivce.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,18 @@ public class UserController {
         resultMap.put("status", SUCCESS);
         resultMap.put("msg", "로그아웃 성공! 토큰이 삭제되었습니다.");
         resultMap.put("response", null);
+
+        return ResponseEntity.ok(resultMap);
+    }
+
+    @PostMapping("/reissue")
+    @Operation(summary = "액세스 토큰 갱신", description = "AccessToken 만료 시, RefreshToken 을 통해 갱신하는 API")
+    public ResponseEntity<Map<String, Object>> reissueAccessToken(HttpServletRequest request) {
+        Map<String, Object> resultMap = new HashMap<>();
+
+        resultMap.put("status", SUCCESS);
+        resultMap.put("msg", "토큰 갱신 완료!");
+        resultMap.put("response", userService.reissueAccessToken(resolveToken(request)));
 
         return ResponseEntity.ok(resultMap);
     }

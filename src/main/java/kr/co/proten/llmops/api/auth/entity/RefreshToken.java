@@ -3,10 +3,12 @@ package kr.co.proten.llmops.api.auth.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 @Getter
 @NoArgsConstructor
 @Entity
+@DynamicUpdate
 public class RefreshToken {
 
     @Id

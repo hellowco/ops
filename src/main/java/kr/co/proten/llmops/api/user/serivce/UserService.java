@@ -17,6 +17,8 @@ public interface UserService {
 
     void logout(String token);
 
+    AuthResponseDto reissueAccessToken(String refreshTokenStr);
+
     UserDTO updateUser(String userId, UserUpdateDTO dto);
 
     void updatePassword(String userId, PasswordUpdateDTO passwordUpdateDTO);
